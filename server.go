@@ -1,33 +1,191 @@
 package xmpp
 
 import (
+	"errors"
+	"log"
 	"net"
 )
 
-type XMPPServer struct {
-	clients []*XMPPClient
-
-	listener net.Listener
-
-	handlers map[string]func(*XMPPClient, interface{}) error
+type XMPPClientInfo struct {
 }
 
-func NewServer(laddr string) (*XMPPServer, error) {
-	s := &XMPPServer{}
-    s.handlers = make(map[string]func(*XMPPClient, interface{}) error)
+type XMPPOptions struct {
+	SASLMechanisms     []string
+	SASLServerHandlers []XMPPSASLServerMechanismHandler
+	SASLClientHandlers []XMPPSASLClientMechanismHandler
+	IQHandler          func(iq *XMPPClientIQ) (interface{}, error)
+	MessageHandler     func(msg *XMPPClientMessage) (interface{}, error)
+	PresenceHandler    func(prsc *XMPPClientPresence) (interface{}, error)
+	Handlers           map[string]func(interface{}) (interface{}, error)
+	ServerURL          string
+	ListenIP           string
+}
 
-	listener, err := net.Listen("tcp", laddr)
+func StreamHeaderDefaultHandler(c *XMPPClient, s *XMPPStream) error {
+	log.Printf("C: %+v", s)
+	if err := c.ResponseStreamHeader(s.To, s.From, "zh"); err != nil {
+		return err
+	}
+
+	if c.State == STATE_RESTART {
+		if err := c.Response(XMPPStreamFeatures{
+			Bind: &XMPPBind{},
+		}); err != nil {
+			return err
+		}
+	} else {
+		if err := c.Response(XMPPStreamFeatures{
+			SASLMechanisms: &XMPPSASLMechanisms{
+				Mechanisms: []string{
+					"PLAIN",
+				},
+			},
+		}); err != nil {
+			return err
+		}
+		c.State = STATE_SASL_AUTH
+	}
+
+	return nil
+}
+
+func StreamNegociationDefaultHandler(c *XMPPClient, elem interface{}) error {
+
+	switch e := elem.(type) {
+	case *XMPPSASLAuth:
+		log.Printf("%+v", e)
+
+		found := false
+		for index, mec := range c.server.opts.SASLMechanisms {
+			if mec == e.Mechanism {
+				found = true
+				c.srvHandler = c.server.opts.SASLServerHandlers[index]
+				name, ret, err := c.srvHandler.Auth(e.Data)
+				c.BindJID = name
+				c.State = STATE_SASL_AUTH
+				if err != nil {
+					log.Printf("%+v Err: %s", c.conn.RemoteAddr(), err)
+					c.srvHandler = nil
+				} else {
+					_, e1 := ret.(*XMPPSASLSuccess)
+					if e1 {
+						c.State = STATE_RESTART
+					}
+					_, e2 := ret.(XMPPSASLSuccess)
+					if e2 {
+						c.State = STATE_RESTART
+					}
+				}
+				if err = c.Response(ret); err != nil {
+					log.Printf("%+v Err: %s", c.conn.RemoteAddr(), err)
+				}
+				break
+			}
+		}
+
+		if !found {
+			log.Printf("%+v Err: Invalid Mechanism %s", c.conn.RemoteAddr(), e.Mechanism)
+			if err := c.Response(XMPPSASLFailure{
+				InvalidMechanism: &XMPPSASLErrorInvalidMechanism{},
+			}); err != nil {
+				return nil
+			}
+		}
+
+	default:
+		log.Printf("%+v Err: Unsupported XML", c.conn.RemoteAddr())
+		if err := c.Response(XMPPSASLFailure{
+			MalformedRequest: &XMPPSASLErrorMalformedRequest{},
+		}); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func StreamIQDefaultHandler(iq *XMPPClientIQ) (interface{}, error) {
+
+	if iq.Type == "set" {
+		if iq.Bind != nil {
+			log.Printf("From client bind %+v", iq.Bind)
+			if iq.Bind.Resource != "" {
+				log.Printf("Client bind resource %s", iq.Bind.Resource)
+
+				return &XMPPClientIQ{
+					Bind: &XMPPBind{
+						Jid: "abc@abc.com/" + iq.Bind.Resource,
+					},
+					Type: "result",
+					Id:   iq.Id,
+				}, nil
+			} else {
+				genr := "balcony"
+				log.Printf("Client asked server for resournce %s", genr)
+				return &XMPPClientIQ{
+					Bind: &XMPPBind{
+						Jid: "abc@abc.com/" + genr,
+					},
+					Type: "result",
+					Id:   iq.Id,
+				}, nil
+			}
+		}
+	} else if iq.Type == "result" {
+
+	}
+
+	return &XMPPClientIQ{
+		Error: &XMPPStanzaError{
+			BadRequest: &XMPPStanzaErrorBadRequest{},
+		},
+	}, errors.New("Bad Request")
+}
+
+func StreamPresenceDefaultHandler(presence *XMPPClientPresence) (interface{}, error) {
+
+	log.Printf("Client Present %+v", presence)
+
+	return nil, nil
+}
+
+func StreamMessageDefaultHandler(msg *XMPPClientMessage) (interface{}, error) {
+    log.Printf("Client message %+v", msg)
+
+    return nil, nil
+}
+
+type XMPPServer struct {
+	entities map[*XMPPClient]*XMPPClientInfo
+	listener net.Listener
+	opts     *XMPPOptions
+
+	streamHandler      func(*XMPPClient, *XMPPStream) error
+	negociationHandler func(*XMPPClient, interface{}) error
+}
+
+func NewServer(opts *XMPPOptions) (*XMPPServer, error) {
+	s := &XMPPServer{
+		entities:           make(map[*XMPPClient]*XMPPClientInfo),
+		opts:               opts,
+		streamHandler:      StreamHeaderDefaultHandler,
+		negociationHandler: StreamNegociationDefaultHandler,
+	}
+
+	listener, err := net.Listen("tcp", opts.ListenIP)
 	if err != nil {
 		return s, err
 	}
 
 	s.listener = listener
 
-	return s, nil
-}
+	// Default Handlers
+	//s.SetHandler(TAG_STREAM, StreamHeaderDefaultHandler)
+	//s.SetHandler(TAG_SASL_AUTH, StreamNegociationDefaultHandler)
+	//s.SetHandler(TAG_CLIENT_IQ, StreamIQDefaultHandler)
+	//s.SetHandler(TAG_CLIENT_PRESENCE, StreamPresenceDefaultHandler)
 
-func (s *XMPPServer) AddHandler(tag string, h func(*XMPPClient, interface{}) error) {
-    s.handlers[tag] = h
+	return s, nil
 }
 
 func (s *XMPPServer) ServeForever() error {
@@ -37,8 +195,8 @@ func (s *XMPPServer) ServeForever() error {
 			return err
 		}
 
-		c := NewClient(conn, &s.handlers)
-		s.clients = append(s.clients, c)
+		c := NewClient(conn, s)
+		s.entities[c] = &XMPPClientInfo{}
 	}
 	return nil
 }

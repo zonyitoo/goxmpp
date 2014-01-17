@@ -28,7 +28,10 @@ type XMPPClient struct {
 	bufrw      *bufio.ReadWriter
 	xmlDecoder *xml.Decoder
 	State      int
-	handlers   *map[string]func(*XMPPClient, interface{}) error
+	BindJID    string
+	srvHandler XMPPSASLServerMechanismHandler
+	cliHandler XMPPSASLClientMechanismHandler
+	server     *XMPPServer
 	Id         string
 }
 
@@ -37,11 +40,11 @@ func (c *XMPPClient) Write() {
 		_, err := c.bufrw.Write(data)
 		if err != nil {
 			c.CloseStream()
-			log.Printf("Err: %+v %s", c.conn.RemoteAddr(), err)
+			log.Printf("%+v Err: %s", c.conn.RemoteAddr(), err)
 			break
 		}
 		c.bufrw.Flush()
-		log.Printf("Response %+v %s\n", c.conn.RemoteAddr(), string(data))
+		log.Printf("%+v Resp: %s\n", c.conn.RemoteAddr(), string(data))
 	}
 }
 
@@ -50,44 +53,104 @@ PROCESS_LOOP:
 	for {
 		token, err := c.xmlDecoder.Token()
 		if err != nil {
-			log.Printf("Err: %+v %s", c.conn.RemoteAddr(), err)
+			log.Printf("%+v Err: %s", c.conn.RemoteAddr(), err)
 			break
 		}
 
 		switch t := token.(type) {
 		case xml.StartElement:
-			elem, serr := c.decodeXMLStreamElements(&t)
+			tag, elem, serr := c.decodeXMLStreamElements(&t)
 			if serr != nil {
 				c.Response(serr)
 				c.CloseStream()
 				break PROCESS_LOOP
 			}
 
-			log.Printf("From %+v %+v", c.conn.RemoteAddr(), elem)
+			log.Printf("%+v Recv: %s %+v", c.conn.RemoteAddr(), tag, elem)
 
 			switch t := elem.(type) {
 			case *XMPPStream:
-				if err := c.CallHandler(HANDLER_STREAM, t); err != nil {
-					log.Printf("Err: %+v %s", c.conn.RemoteAddr(), err)
-					break PROCESS_LOOP
+				if err := c.server.streamHandler(c, t); err != nil {
+					log.Printf("%+v Err: %s", c.conn.RemoteAddr(), err)
 				}
 			case *XMPPSASLAuth:
-				if err := c.CallHandler(HANDLER_SASL_AUTH, t); err != nil {
-					log.Printf("Err: %+v %s", c.conn.RemoteAddr(), err)
+				err := c.server.negociationHandler(c, t)
+				if err != nil {
+					log.Printf("%+v Err: %s", c.conn.RemoteAddr(), err)
+					break PROCESS_LOOP
+				}
+			case *XMPPSASLChallenge:
+				err := c.server.negociationHandler(c, t)
+				if err != nil {
+					log.Printf("%+v Err: %s", c.conn.RemoteAddr(), err)
+					break PROCESS_LOOP
+				}
+			case *XMPPSASLResponse:
+				err := c.server.negociationHandler(c, t)
+				if err != nil {
+					log.Printf("%+v Err: %s", c.conn.RemoteAddr(), err)
+					break PROCESS_LOOP
+				}
+			case *XMPPSASLSuccess:
+				err := c.server.negociationHandler(c, t)
+				if err != nil {
+					log.Printf("%+v Err: %s", c.conn.RemoteAddr(), err)
+					break PROCESS_LOOP
+				}
+			case *XMPPSASLFailure:
+				err := c.server.negociationHandler(c, t)
+				if err != nil {
+					log.Printf("%+v Err: %s", c.conn.RemoteAddr(), err)
 					break PROCESS_LOOP
 				}
 			case *XMPPClientIQ:
-				if err := c.CallHandler(HANDLER_CLIENT_IQ, t); err != nil {
-					log.Printf("Err: %+v %s", c.conn.RemoteAddr(), err)
+				ret, err := c.server.opts.IQHandler(t)
+				if err != nil {
+					log.Printf("%+v Err: %s", c.conn.RemoteAddr(), err)
+				}
+				if err = c.Response(ret); err != nil {
+					log.Printf("%+v Err: %s", c.conn.RemoteAddr(), err)
+					break PROCESS_LOOP
+				}
+			case *XMPPClientMessage:
+				ret, err := c.server.opts.MessageHandler(t)
+				if err != nil {
+					log.Printf("%+v Err: %s", c.conn.RemoteAddr(), err)
+				}
+				if err = c.Response(ret); err != nil {
+					log.Printf("%+v Err: %s", c.conn.RemoteAddr(), err)
 					break PROCESS_LOOP
 				}
 			case *XMPPClientPresence:
-				if err := c.CallHandler(HANDLER_CLIENT_PRESENCE, t); err != nil {
-					log.Printf("Err: %+v %s", c.conn.RemoteAddr(), err)
+				ret, err := c.server.opts.PresenceHandler(t)
+				if err != nil {
+					log.Printf("%+v Err: %s", c.conn.RemoteAddr(), err)
+				}
+				if err = c.Response(ret); err != nil {
+					log.Printf("%+v Err: %s", c.conn.RemoteAddr(), err)
 					break PROCESS_LOOP
 				}
-			}
+			default:
+				if h, ok := c.server.opts.Handlers[tag]; ok {
+					ret, err := h(t)
+					if err != nil {
+						log.Printf("%+v Err: %s", c.conn.RemoteAddr(), err)
+					}
+					if err = c.Response(ret); err != nil {
+						log.Printf("%+v Err: %s", c.conn.RemoteAddr(), err)
+						break PROCESS_LOOP
+					}
+				} else {
+					log.Printf("%+v Err: Unrecognized XML %s", c.conn.RemoteAddr(), tag)
+					if err := c.Response(XMPPStreamError{
+						UndefinedCondition: &XMPPStreamErrorUndefinedCondition{},
+					}); err != nil {
 
+						log.Printf("%+v Err: %s", c.conn.RemoteAddr(), err)
+						break PROCESS_LOOP
+					}
+				}
+			}
 		case xml.ProcInst:
 			if serr := c.processXMLProcInst(&t); serr != nil {
 				c.ResponseStreamHeader("", "", "en")
@@ -99,6 +162,9 @@ PROCESS_LOOP:
 			if t.Name.Local == "stream" && t.Name.Space == "stream" {
 				c.CloseStream()
 				break PROCESS_LOOP
+			} else {
+				log.Printf("%+v Unexpected EndElement: %+v",
+					c.conn.RemoteAddr(), t)
 			}
 		}
 	}
@@ -106,7 +172,7 @@ PROCESS_LOOP:
 	c.CloseStream()
 }
 
-func NewClient(conn net.Conn, handler *map[string]func(*XMPPClient, interface{}) error) *XMPPClient {
+func NewClient(conn net.Conn, server *XMPPServer) *XMPPClient {
 	bufrw := bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn))
 	c := &XMPPClient{
 		incoming:   make(chan []byte),
@@ -115,7 +181,7 @@ func NewClient(conn net.Conn, handler *map[string]func(*XMPPClient, interface{})
 		bufrw:      bufrw,
 		xmlDecoder: xml.NewDecoder(bufrw),
 		State:      STATE_INIT,
-		handlers:   handler,
+		server:     server,
 		Id:         generate_random_id(),
 	}
 	go c.Process()
@@ -129,6 +195,10 @@ func (c *XMPPClient) CloseStream() error {
 }
 
 func (c *XMPPClient) Response(obj interface{}) error {
+    if obj == nil {
+        // Blankspace ping
+        c.outgoing <- []byte(" ")
+    }
 	resp, err := xml.Marshal(obj)
 	if err != nil {
 		return err
@@ -137,14 +207,16 @@ func (c *XMPPClient) Response(obj interface{}) error {
 	return nil
 }
 
+/*
 func (c *XMPPClient) CallHandler(tag string, arg interface{}) error {
 
-	if handler, ok := (*c.handlers)[tag]; ok {
+	if handler, ok := (c.server.handlers)[tag]; ok {
 		return handler(c, arg)
 	}
 
 	return nil
 }
+*/
 
 func (c *XMPPClient) ResponseStreamHeader(from, to, langcode string) error {
 
@@ -234,7 +306,7 @@ func (c *XMPPClient) processXMLProcInst(t *xml.ProcInst) *XMPPStreamError {
 	return streamError
 }
 
-func (c *XMPPClient) decodeXMLStreamElements(token *xml.StartElement) (interface{}, *XMPPStreamError) {
+func (c *XMPPClient) decodeXMLStreamElements(token *xml.StartElement) (string, interface{}, *XMPPStreamError) {
 	var tag string = token.Name.Space + ":" + token.Name.Local
 	if token.Name.Space == "" {
 		for _, attr := range token.Attr {
@@ -254,40 +326,42 @@ func (c *XMPPClient) decodeXMLStreamElements(token *xml.StartElement) (interface
 
 	var obj interface{}
 	switch tag {
-	case XMLNS_STREAM + ":stream":
-		return c.decodeStreamHeader(token)
-	case "stream:features":
+	case TAG_STREAM:
+		s, serr := c.decodeStreamHeader(token)
+		return TAG_STREAM, s, serr
+	case TAG_STREAM_FEATURES:
 		obj = &XMPPStreamFeatures{}
-	case XMLNS_XMPP_TLS + ":starttls":
+	case TAG_TLS_START:
 		obj = &XMPPStartTLS{}
-	case XMLNS_XMPP_TLS + ":proceed":
+	case TAG_TLS_PROCEED:
 		obj = &XMPPTLSProceed{}
-	case XMLNS_XMPP_TLS + ":failure":
+	case TAG_TLS_FAILURE:
 		obj = &XMPPTLSFailure{}
-	case XMLNS_XMPP_SASL + ":auth":
+
+	case TAG_SASL_AUTH:
 		obj = &XMPPSASLAuth{}
-	case XMLNS_XMPP_SASL + ":challenge":
+	case TAG_SASL_CHALLENGE:
 		obj = &XMPPSASLChallenge{}
-	case XMLNS_XMPP_SASL + ":response":
+	case TAG_SASL_RESPONSE:
 		obj = &XMPPSASLResponse{}
-	case XMLNS_XMPP_SASL + ":success":
+	case TAG_SASL_SUCCESS:
 		obj = &XMPPSASLSuccess{}
-	case XMLNS_XMPP_SASL + ":failure":
+	case TAG_SASL_FAILURE:
 		obj = &XMPPSASLFailure{}
-	case XMLNS_JABBER_CLIENT + ":iq":
+	case TAG_CLIENT_IQ:
 		obj = &XMPPClientIQ{}
-	case XMLNS_JABBER_CLIENT + ":presence":
+	case TAG_CLIENT_PRESENCE:
 		obj = &XMPPClientPresence{}
-    case XMLNS_JABBER_CLIENT + ":message":
-        obj = &XMPPClientMessage{}
+	case TAG_CLIENT_MESSAGE:
+		obj = &XMPPClientMessage{}
 	default:
 		log.Printf("Cannot decode token: %+v", token)
-		return "", &XMPPStreamError{
+		return "", "", &XMPPStreamError{
 			NotWellFormed: &XMPPStreamErrorNotWellFormed{},
 		}
 	}
 
-	return obj, c.decodeXMLElement(token, obj)
+	return tag, obj, c.decodeXMLElement(token, obj)
 	/*
 		for {
 			token, err := c.xmlDecoder.RawToken()
@@ -343,13 +417,13 @@ func (c *XMPPClient) decodeXMLStreamElements(token *xml.StartElement) (interface
 						element = &XMPPStartTLS{}
 					case "auth":
 						element = &XMPPSASLAuth{}
-						tag = HANDLER_SASL_AUTH
+						tag = TAG_SASL_AUTH
 					case "response":
 						element = &XMPPSASLResponse{}
-						tag = HANDLER_SASL_RESPONSE
+						tag = TAG_SASL_RESPONSE
 					case "iq":
 						element = &XMPPClientIQ{}
-						tag = HANDLER_CLIENT_IQ
+						tag = TAG_CLIENT_IQ
 					default:
 						continue
 					}
@@ -369,7 +443,6 @@ func (c *XMPPClient) decodeXMLStreamElements(token *xml.StartElement) (interface
 			}
 		}
 	*/
-	return "", nil
 }
 
 /*

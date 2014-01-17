@@ -8,6 +8,7 @@ import (
 const (
 	XMLNS_JABBER_CLIENT    = "jabber:client"
 	XMLNS_JABBER_IQ_ROSTER = "jabber:iq:roster"
+	XMLNS_JABBER_SERVER    = "jabber:server"
 
 	XMLNS_STREAM       = "http://etherx.jabber.org/streams"
 	XMLNS_XMPP_TLS     = "urn:ietf:params:xml:ns:xmpp-tls"
@@ -15,7 +16,8 @@ const (
 	XMLNS_XMPP_BIND    = "urn:ietf:params:xml:ns:xmpp-bind"
 	XMLNS_XMPP_STANZAS = "urn:ietf:params:xml:ns:xmpp-stanzas"
 
-	TAG_STREAM          = "stream:stream"
+	TAG_STREAM          = XMLNS_STREAM + ":stream"
+	TAG_STREAM_FEATURES = "stream:features"
 	TAG_TLS_START       = XMLNS_XMPP_TLS + ":starttls"
 	TAG_TLS_PROCEED     = XMLNS_XMPP_TLS + ":proceed"
 	TAG_TLS_FAILURE     = XMLNS_XMPP_TLS + ":failure"
@@ -27,6 +29,7 @@ const (
 	TAG_SASL_FAILURE    = XMLNS_XMPP_SASL + ":failure"
 	TAG_CLIENT_IQ       = XMLNS_JABBER_CLIENT + ":iq"
 	TAG_CLIENT_PRESENCE = XMLNS_JABBER_CLIENT + ":presence"
+	TAG_CLIENT_MESSAGE  = XMLNS_JABBER_CLIENT + ":message"
 )
 
 // RFC6120 Section 4
@@ -350,6 +353,8 @@ type XMPPClientMessage struct {
 	Type    string   `xml:"type,attr"`
 	XmlLang string   `xml:"xml:lang,attr"`
 	Body    string   `xml:"body"`
+
+	Error *XMPPStanzaError `xml:",omitempty"`
 }
 
 // RFC6120 Section 8.2.2
@@ -369,6 +374,8 @@ type XMPPClientPresence struct {
 	XmlLang string   `xml:"xml:lang,attr"`
 	Show    string   `xml:"show",omitempty`
 	Status  string   `xml:"status",omitempty`
+
+	Error *XMPPStanzaError `xml:",omitempty"`
 }
 
 // RFC6120 Section 4.9
@@ -975,8 +982,7 @@ type XMPPStanzaErrorUnexpectedRequest struct {
 	Error   string                          `xml:",innerxml,omitempty"`
 }
 
-const stream_response_begin_fmt = `<stream:stream from='%s' to='%s' version='%s' xml:lang='%s' id='%s' xmlns='%s' xmlns:stream='%s'>
-`
+const stream_response_begin_fmt = `<stream:stream from='%s' to='%s' version='%s' xml:lang='%s' id='%s' xmlns='%s' xmlns:stream='%s'>`
 
 const stream_end_fmt = `</stream:stream>`
 
