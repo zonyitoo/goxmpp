@@ -191,6 +191,7 @@ func NewClient(conn net.Conn, server *XMPPServer) *XMPPClient {
 
 func (c *XMPPClient) CloseStream() error {
 	c.outgoing <- []byte(stream_end_fmt)
+    delete(c.server.entities, c)
 	return c.conn.Close()
 }
 

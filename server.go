@@ -36,9 +36,7 @@ func StreamHeaderDefaultHandler(c *XMPPClient, s *XMPPStream) error {
 	} else {
 		if err := c.Response(XMPPStreamFeatures{
 			SASLMechanisms: &XMPPSASLMechanisms{
-				Mechanisms: []string{
-					"PLAIN",
-				},
+				Mechanisms: c.server.opts.SASLMechanisms,
 			},
 		}); err != nil {
 			return err
@@ -63,9 +61,14 @@ func StreamNegociationDefaultHandler(c *XMPPClient, elem interface{}) error {
 				name, ret, err := c.srvHandler.Auth(e.Data)
 				c.BindJID = name
 				c.State = STATE_SASL_AUTH
+				if err := c.Response(ret); err != nil {
+					log.Printf("%+v Err: %s", c.conn.RemoteAddr(), err)
+					return err
+				}
 				if err != nil {
 					log.Printf("%+v Err: %s", c.conn.RemoteAddr(), err)
 					c.srvHandler = nil
+					return err
 				} else {
 					_, e1 := ret.(*XMPPSASLSuccess)
 					if e1 {
@@ -76,9 +79,7 @@ func StreamNegociationDefaultHandler(c *XMPPClient, elem interface{}) error {
 						c.State = STATE_RESTART
 					}
 				}
-				if err = c.Response(ret); err != nil {
-					log.Printf("%+v Err: %s", c.conn.RemoteAddr(), err)
-				}
+
 				break
 			}
 		}
@@ -88,8 +89,29 @@ func StreamNegociationDefaultHandler(c *XMPPClient, elem interface{}) error {
 			if err := c.Response(XMPPSASLFailure{
 				InvalidMechanism: &XMPPSASLErrorInvalidMechanism{},
 			}); err != nil {
-				return nil
+				return err
 			}
+		}
+	case *XMPPSASLResponse:
+		if c.srvHandler == nil {
+			log.Printf("%+v Err: Invalid <response/>", c.conn.RemoteAddr())
+			if err := c.Response(XMPPSASLFailure{
+				MalformedRequest: &XMPPSASLErrorMalformedRequest{},
+			}); err != nil {
+				return err
+			}
+		}
+		name, ret, err := c.srvHandler.Response(e.Data)
+		if err := c.Response(ret); err != nil {
+			log.Printf("%+v Err: %s", c.conn.RemoteAddr(), err)
+			return err
+		}
+		if err != nil {
+			log.Printf("%+v Err: %s", c.conn.RemoteAddr(), err)
+			c.srvHandler = nil
+			return err
+		} else {
+			c.BindJID = name
 		}
 
 	default:
@@ -150,9 +172,9 @@ func StreamPresenceDefaultHandler(presence *XMPPClientPresence) (interface{}, er
 }
 
 func StreamMessageDefaultHandler(msg *XMPPClientMessage) (interface{}, error) {
-    log.Printf("Client message %+v", msg)
+	log.Printf("Client message %+v", msg)
 
-    return nil, nil
+	return nil, nil
 }
 
 type XMPPServer struct {
