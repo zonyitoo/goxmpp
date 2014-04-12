@@ -1,52 +1,60 @@
 package xmpp
 
 import (
-	"encoding/xml"
-	"fmt"
+    "encoding/xml"
+    "fmt"
 )
 
 const (
-	XMLNS_JABBER_CLIENT    = "jabber:client"
-	XMLNS_JABBER_IQ_ROSTER = "jabber:iq:roster"
-	XMLNS_JABBER_SERVER    = "jabber:server"
+    XMLNS_JABBER_CLIENT    = "jabber:client"
+    XMLNS_JABBER_IQ_ROSTER = "jabber:iq:roster"
+    XMLNS_JABBER_SERVER    = "jabber:server"
 
-	XMLNS_STREAM       = "http://etherx.jabber.org/streams"
-	XMLNS_XMPP_TLS     = "urn:ietf:params:xml:ns:xmpp-tls"
-	XMLNS_XMPP_SASL    = "urn:ietf:params:xml:ns:xmpp-sasl"
-	XMLNS_XMPP_BIND    = "urn:ietf:params:xml:ns:xmpp-bind"
-	XMLNS_XMPP_STANZAS = "urn:ietf:params:xml:ns:xmpp-stanzas"
-
-	TAG_STREAM          = XMLNS_STREAM + ":stream"
-	TAG_STREAM_FEATURES = "stream:features"
-	TAG_TLS_START       = XMLNS_XMPP_TLS + ":starttls"
-	TAG_TLS_PROCEED     = XMLNS_XMPP_TLS + ":proceed"
-	TAG_TLS_FAILURE     = XMLNS_XMPP_TLS + ":failure"
-	TAG_TLS_ABORT       = XMLNS_XMPP_TLS + ":abort"
-	TAG_SASL_AUTH       = XMLNS_XMPP_SASL + ":auth"
-	TAG_SASL_CHALLENGE  = XMLNS_XMPP_SASL + ":challenge"
-	TAG_SASL_RESPONSE   = XMLNS_XMPP_SASL + ":response"
-	TAG_SASL_SUCCESS    = XMLNS_XMPP_SASL + ":success"
-	TAG_SASL_FAILURE    = XMLNS_XMPP_SASL + ":failure"
-	TAG_CLIENT_IQ       = XMLNS_JABBER_CLIENT + ":iq"
-	TAG_CLIENT_PRESENCE = XMLNS_JABBER_CLIENT + ":presence"
-	TAG_CLIENT_MESSAGE  = XMLNS_JABBER_CLIENT + ":message"
+    XMLNS_STREAM       = "http://etherx.jabber.org/streams"
+    XMLNS_XMPP_TLS     = "urn:ietf:params:xml:ns:xmpp-tls"
+    XMLNS_XMPP_SASL    = "urn:ietf:params:xml:ns:xmpp-sasl"
+    XMLNS_XMPP_BIND    = "urn:ietf:params:xml:ns:xmpp-bind"
+    XMLNS_XMPP_STANZAS = "urn:ietf:params:xml:ns:xmpp-stanzas"
 )
+
+var TAG_STREAM xml.Name = xml.Name{Space: XMLNS_STREAM, Local: "stream"}
+var TAG_STREAM_FEATURES xml.Name = xml.Name{Space: XMLNS_STREAM, Local: "features"}
+var TAG_TLS_START xml.Name = xml.Name{Space: XMLNS_XMPP_TLS, Local: "starttls"}
+var TAG_TLS_PROCEED xml.Name = xml.Name{Space: XMLNS_XMPP_TLS, Local: "proceed"}
+var TAG_TLS_FAILURE xml.Name = xml.Name{Space: XMLNS_XMPP_TLS, Local: "failure"}
+var TAG_TLS_ABORT xml.Name = xml.Name{Space: XMLNS_XMPP_TLS, Local: "abort"}
+var TAG_SASL_AUTH xml.Name = xml.Name{Space: XMLNS_XMPP_SASL, Local: "auth"}
+var TAG_SASL_CHALLENGE xml.Name = xml.Name{Space: XMLNS_XMPP_SASL, Local: "challenge"}
+var TAG_SASL_RESPONSE xml.Name = xml.Name{Space: XMLNS_XMPP_SASL, Local: "response"}
+var TAG_SASL_SUCCESS xml.Name = xml.Name{Space: XMLNS_XMPP_SASL, Local: "success"}
+var TAG_SASL_FAILURE xml.Name = xml.Name{Space: XMLNS_XMPP_SASL, Local: "failure"}
+var TAG_CLIENT_IQ xml.Name = xml.Name{Space: XMLNS_JABBER_CLIENT, Local: "iq"}
+var TAG_CLIENT_PRESENCE xml.Name = xml.Name{Space: XMLNS_JABBER_CLIENT, Local: "presence"}
+var TAG_CLIENT_MESSAGE xml.Name = xml.Name{Space: XMLNS_JABBER_CLIENT, Local: "message"}
 
 // RFC6120 Section 4
 type XMPPStream struct {
-	XMLName xml.Name `xml:"jabber:client stream:stream"`
-	From    string   `xml:"from,attr"`
-	To      string   `xml:"to,attr"`
-	Id      string   `"xml:id,attr,omitempty"`
-	Version string   `xml:"version,attr"`
-	XmlLang string   `xml:"xml:lang,attr"`
+    XMLName xml.Name `xml:"http://etherx.jabber.org/streams stream"`
+    From    string   `xml:"from,attr"`
+    To      string   `xml:"to,attr"`
+    Id      string   `xml:"id,attr,omitempty"`
+    Version string   `xml:"version,attr"`
+    XmlLang string   `xml:"xml:lang,attr"`
+}
+
+type XMPPStreamEnd struct {
+    XMLName xml.Name `xml:"http://etherx.jabber.org/streams stream"`
 }
 
 type XMPPStreamFeatures struct {
-	XMLName        xml.Name            `xml:"stream:features"`
-	StartTLS       *XMPPStartTLS       `xml:",omitempty"`
-	SASLMechanisms *XMPPSASLMechanisms `xml:",omitempty"`
-	Bind           *XMPPBind           `xml:",omitempty"`
+    XMLName        xml.Name            `xml:"features"`
+    StartTLS       *XMPPStartTLS       `xml:",omitempty"`
+    SASLMechanisms *XMPPSASLMechanisms `xml:",omitempty"`
+    Bind           *XMPPBind           `xml:",omitempty"`
+}
+
+type XMPPRequired struct {
+    XMLName xml.Name `xml:"required"`
 }
 
 // RFC6120 Section 5.4.2.1
@@ -56,8 +64,8 @@ type XMPPStreamFeatures struct {
 // 'urn:ietf:params:xml:ns:xmpp-tls' namespace) to instruct the receiving entity
 // that it wishes to begin a STARTTLS negotiation to secure the stream.
 type XMPPStartTLS struct {
-	XMLName  xml.Name `xml:"urn:ietf:params:xml:ns:xmpp-tls starttls"`
-	Required bool     `xml:"required,omitempty"`
+    XMLName  xml.Name      `xml:"urn:ietf:params:xml:ns:xmpp-tls starttls"`
+    Required *XMPPRequired `xml:"required,omitempty"`
 }
 
 // RFC6120 Section 5.4.2.3
@@ -65,7 +73,7 @@ type XMPPStartTLS struct {
 // If the proceed case occurs, the receiving entity MUST return a <proceed/>
 // element qualified by the 'urn:ietf:params:xml:ns:xmpp-tls' namespace.
 type XMPPTLSProceed struct {
-	XMLName xml.Name `xml:"urn:ietf:params:xml:ns:xmpp-tls proceed"`
+    XMLName xml.Name `xml:"urn:ietf:params:xml:ns:xmpp-tls proceed"`
 }
 
 // RFC6120 Section 5.4.2.2
@@ -74,16 +82,16 @@ type XMPPTLSProceed struct {
 // qualified by the 'urn:ietf:params:xml:ns:xmpp-tls' namespace, close the XML stream,
 // and terminate the underlying TCP connection.
 type XMPPTLSFailure struct {
-	XMLName xml.Name `xml:"urn:ietf:params:xml:ns:xmpp-tls failure"`
+    XMLName xml.Name `xml:"urn:ietf:params:xml:ns:xmpp-tls failure"`
 }
 
 type XMPPTLSAbort struct {
-	XMLName xml.Name `xml:"urn:ietf:params:xml:ns:xmpp-tls abort"`
+    XMLName xml.Name `xml:"urn:ietf:params:xml:ns:xmpp-tls abort"`
 }
 
 type XMPPSASLMechanisms struct {
-	XMLName    xml.Name `xml:"urn:ietf:params:xml:ns:xmpp-sasl mechanisms"`
-	Mechanisms []string `xml:"mechanism"`
+    XMLName    xml.Name `xml:"urn:ietf:params:xml:ns:xmpp-sasl mechanisms"`
+    Mechanisms []string `xml:"mechanism"`
 }
 
 // RFC6120 Section 6.4.2
@@ -97,9 +105,9 @@ type XMPPSASLMechanisms struct {
 // it MUST transmit the response as a single equals sign character ("="), which
 // indicates that the response is present but contains no data.
 type XMPPSASLAuth struct {
-	XMLName   xml.Name `xml:"urn:ietf:params:xml:ns:xmpp-sasl auth"`
-	Mechanism string   `xml:"mechanism,attr"`
-	Data      string   `xml:",chardata"`
+    XMLName   xml.Name `xml:"urn:ietf:params:xml:ns:xmpp-sasl auth"`
+    Mechanism string   `xml:"mechanism,attr"`
+    Data      string   `xml:",chardata"`
 }
 
 // RFC6120 Section 6.4.3
@@ -124,13 +132,13 @@ type XMPPSASLAuth struct {
 // * The receiving entity reports success of the handshake.
 // * These scenarios are described in the following sections.
 type XMPPSASLChallenge struct {
-	XMLName xml.Name `xml:"urn:ietf:params:xml:ns:xmpp-sasl challenge"`
-	Data    string   `xml:",chardata"`
+    XMLName xml.Name `xml:"urn:ietf:params:xml:ns:xmpp-sasl challenge"`
+    Data    string   `xml:",chardata"`
 }
 
 type XMPPSASLResponse struct {
-	XMLName xml.Name `xml:"urn:ietf:params:xml:ns:xmpp-sasl response"`
-	Data    string   `xml:",chardata"`
+    XMLName xml.Name `xml:"urn:ietf:params:xml:ns:xmpp-sasl response"`
+    Data    string   `xml:",chardata"`
 }
 
 // RFC6120 Section 6.4.6
@@ -151,8 +159,8 @@ type XMPPSASLResponse struct {
 // SASL mechanism supports or requires it. If the receiving entity needs to send additional
 // data of zero length, it MUST transmit the data as a single equals sign character ("=").
 type XMPPSASLSuccess struct {
-	XMLName xml.Name `xml:"urn:ietf:params:xml:ns:xmpp-sasl success"`
-	Data    string   `xml:",chardata"`
+    XMLName xml.Name `xml:"urn:ietf:params:xml:ns:xmpp-sasl success"`
+    Data    string   `xml:",chardata"`
 }
 
 // RFC6120 Section 6.4.4
@@ -160,7 +168,7 @@ type XMPPSASLSuccess struct {
 // The initiating entity aborts the handshake for this authentication mechanism by sending
 // an <abort/> element qualified by the 'urn:ietf:params:xml:ns:xmpp-sasl' namespace.
 type XMPPSASLAbort struct {
-	XMLName xml.Name `xml:"urn:ietf:params:xml:ns:xmpp-sasl abort"`
+    XMLName xml.Name `xml:"urn:ietf:params:xml:ns:xmpp-sasl abort"`
 }
 
 // RFC6120 Section 6.4.5
@@ -170,19 +178,19 @@ type XMPPSASLAbort struct {
 // namespace (the particular cause of failure MUST be communicated in an appropriate child
 // element of the <failure/> element as defined under Section 6.5).
 type XMPPSASLFailure struct {
-	XMLName xml.Name `xml:"urn:ietf:params:xml:ns:xmpp-sasl failure"`
+    XMLName xml.Name `xml:"urn:ietf:params:xml:ns:xmpp-sasl failure"`
 
-	Aborted              *XMPPSASLErrorAborted              `xml:",omitempty"`
-	AccountDisabled      *XMPPSASLErrorAccountDisabled      `xml:",omitempty"`
-	CredentialsExpired   *XMPPSASLErrorCredentialsExpired   `xml:",omitempty"`
-	EncryptionRequired   *XMPPSASLErrorEncryptionRequired   `xml:",omitempty"`
-	IncorrectEncoding    *XMPPSASLErrorIncorrectEncoding    `xml:",omitempty"`
-	InvalidAuthzid       *XMPPSASLErrorInvalidAuthzid       `xml:",omitempty"`
-	InvalidMechanism     *XMPPSASLErrorInvalidMechanism     `xml:",omitempty"`
-	MalformedRequest     *XMPPSASLErrorMalformedRequest     `xml:",omitempty"`
-	MechanismTooWeak     *XMPPSASLErrorMechanismTooWeak     `xml:",omitempty"`
-	NotAuthorized        *XMPPSASLErrorNotAuthorized        `xml:",omitempty"`
-	TemporaryAuthFailure *XMPPSASLErrorTemporaryAuthFailure `xml:",omitempty"`
+    Aborted              *XMPPSASLErrorAborted              `xml:",omitempty"`
+    AccountDisabled      *XMPPSASLErrorAccountDisabled      `xml:",omitempty"`
+    CredentialsExpired   *XMPPSASLErrorCredentialsExpired   `xml:",omitempty"`
+    EncryptionRequired   *XMPPSASLErrorEncryptionRequired   `xml:",omitempty"`
+    IncorrectEncoding    *XMPPSASLErrorIncorrectEncoding    `xml:",omitempty"`
+    InvalidAuthzid       *XMPPSASLErrorInvalidAuthzid       `xml:",omitempty"`
+    InvalidMechanism     *XMPPSASLErrorInvalidMechanism     `xml:",omitempty"`
+    MalformedRequest     *XMPPSASLErrorMalformedRequest     `xml:",omitempty"`
+    MechanismTooWeak     *XMPPSASLErrorMechanismTooWeak     `xml:",omitempty"`
+    NotAuthorized        *XMPPSASLErrorNotAuthorized        `xml:",omitempty"`
+    TemporaryAuthFailure *XMPPSASLErrorTemporaryAuthFailure `xml:",omitempty"`
 }
 
 // RFC6120 Section 6.5.1
@@ -190,8 +198,8 @@ type XMPPSASLFailure struct {
 // The receiving entity acknowledges that the authentication handshake has been aborted
 // by the initiating entity; sent in reply to the <abort/> element.
 type XMPPSASLErrorAborted struct {
-	XMLName xml.Name                      `xml:"aborted"`
-	Text    *XMPPSASLErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                      `xml:"aborted"`
+    Text    *XMPPSASLErrorDescriptiveText `xml:",omitempty"`
 }
 
 // RFC6120 Section 6.5.2
@@ -199,8 +207,8 @@ type XMPPSASLErrorAborted struct {
 // The account of the initiating entity has been temporarily disabled; sent in reply to
 // an <auth/> element (with or without initial response data) or a <response/> element.
 type XMPPSASLErrorAccountDisabled struct {
-	XMLName xml.Name                      `xml:"account-disabled"`
-	Text    *XMPPSASLErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                      `xml:"account-disabled"`
+    Text    *XMPPSASLErrorDescriptiveText `xml:",omitempty"`
 }
 
 // RFC6120 Section 6.5.3
@@ -209,8 +217,8 @@ type XMPPSASLErrorAccountDisabled struct {
 // have expired; sent in reply to a <response/> element or an <auth/> element with
 // initial response data.
 type XMPPSASLErrorCredentialsExpired struct {
-	XMLName xml.Name                      `xml:"credentials-expired"`
-	Text    *XMPPSASLErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                      `xml:"credentials-expired"`
+    Text    *XMPPSASLErrorDescriptiveText `xml:",omitempty"`
 }
 
 // RFC6120 Section 6.5.4
@@ -219,8 +227,8 @@ type XMPPSASLErrorCredentialsExpired struct {
 // confidentiality and integrity of the underlying stream are protected (typically
 // via TLS); sent in reply to an <auth/> element (with or without initial response data).
 type XMPPSASLErrorEncryptionRequired struct {
-	XMLName xml.Name                      `xml:"encryption-required"`
-	Text    *XMPPSASLErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                      `xml:"encryption-required"`
+    Text    *XMPPSASLErrorDescriptiveText `xml:",omitempty"`
 }
 
 // RFC6120 Section 6.5.5
@@ -230,8 +238,8 @@ type XMPPSASLErrorEncryptionRequired struct {
 // in Section 4 of [BASE64]); sent in reply to a <response/> element or an <auth/> element
 // with initial response data.
 type XMPPSASLErrorIncorrectEncoding struct {
-	XMLName xml.Name                      `xml:"incorrect-encoding"`
-	Text    *XMPPSASLErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                      `xml:"incorrect-encoding"`
+    Text    *XMPPSASLErrorDescriptiveText `xml:",omitempty"`
 }
 
 // RFC6120 Section 6.5.6
@@ -241,8 +249,8 @@ type XMPPSASLErrorIncorrectEncoding struct {
 // authorize that ID; sent in reply to a <response/> element or an <auth/> element with
 // initial response data.
 type XMPPSASLErrorInvalidAuthzid struct {
-	XMLName xml.Name                      `xml:"invalid-authzid"`
-	Text    *XMPPSASLErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                      `xml:"invalid-authzid"`
+    Text    *XMPPSASLErrorDescriptiveText `xml:",omitempty"`
 }
 
 // RFC6120 Section 6.5.7
@@ -250,8 +258,8 @@ type XMPPSASLErrorInvalidAuthzid struct {
 // The initiating entity did not specify a mechanism, or requested a mechanism that
 // is not supported by the receiving entity; sent in reply to an <auth/> element.
 type XMPPSASLErrorInvalidMechanism struct {
-	XMLName xml.Name                      `xml:"invalid-mechanism"`
-	Text    *XMPPSASLErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                      `xml:"invalid-mechanism"`
+    Text    *XMPPSASLErrorDescriptiveText `xml:",omitempty"`
 }
 
 // RFC6120 Section 6.5.8
@@ -261,8 +269,8 @@ type XMPPSASLErrorInvalidMechanism struct {
 // the specified SASL mechanism); sent in reply to an <abort/>, <auth/>, <challenge/>,
 // or <response/> element.
 type XMPPSASLErrorMalformedRequest struct {
-	XMLName xml.Name                      `xml:"malformed-request"`
-	Text    *XMPPSASLErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                      `xml:"malformed-request"`
+    Text    *XMPPSASLErrorDescriptiveText `xml:",omitempty"`
 }
 
 // RFC6120 Section 6.5.9
@@ -271,8 +279,8 @@ type XMPPSASLErrorMalformedRequest struct {
 // permits for that initiating entity; sent in reply to an <auth/> element (with or
 // without initial response data).
 type XMPPSASLErrorMechanismTooWeak struct {
-	XMLName xml.Name                      `xml:"mechanism-too-weak"`
-	Text    *XMPPSASLErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                      `xml:"mechanism-too-weak"`
+    Text    *XMPPSASLErrorDescriptiveText `xml:",omitempty"`
 }
 
 // RFC6120 Section 6.5.10
@@ -283,8 +291,8 @@ type XMPPSASLErrorMechanismTooWeak struct {
 // the failure; sent in reply to a <response/> element or an <auth/> element with
 // initial response data.
 type XMPPSASLErrorNotAuthorized struct {
-	XMLName xml.Name                      `xml:"not-authorized"`
-	Text    *XMPPSASLErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                      `xml:"not-authorized"`
+    Text    *XMPPSASLErrorDescriptiveText `xml:",omitempty"`
 }
 
 // RFC6120 Section 6.5.11
@@ -293,21 +301,21 @@ type XMPPSASLErrorNotAuthorized struct {
 // receiving entity, and it is advisable for the initiating entity to try again later;
 // sent in reply to an <auth/> element or a <response/> element.
 type XMPPSASLErrorTemporaryAuthFailure struct {
-	XMLName xml.Name                      `xml:"temporary-auth-failure"`
-	Text    *XMPPSASLErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                      `xml:"temporary-auth-failure"`
+    Text    *XMPPSASLErrorDescriptiveText `xml:",omitempty"`
 }
 
 type XMPPSASLErrorDescriptiveText struct {
-	XMLName xml.Name `xml:"text"`
-	XmlLang string   `xml:"xml:lang,attr"`
-	Text    string   `xml:",chardata"`
+    XMLName xml.Name `xml:"text"`
+    XmlLang string   `xml:"xml:lang,attr"`
+    Text    string   `xml:",chardata"`
 }
 
 // RFC6120 Section 7
 type XMPPBind struct {
-	XMLName  xml.Name `xml:"urn:ietf:params:xml:ns:xmpp-bind bind"`
-	Resource string   `xml:"resource,omitempty"`
-	Jid      string   `xml:"jid,omitempty"`
+    XMLName  xml.Name `xml:"urn:ietf:params:xml:ns:xmpp-bind bind"`
+    Resource string   `xml:"resource,omitempty"`
+    Jid      string   `xml:"jid,omitempty"`
 }
 
 // RFC6120 Section 8.2.3
@@ -322,19 +330,19 @@ type XMPPBind struct {
 // data exchange such as get/result or set/result (although an error can be returned in
 // reply to a request if appropriate)
 type XMPPClientIQ struct {
-	XMLName xml.Name `xml:"jabber:client iq"`
-	From    string   `xml:"from,attr,omitempty"`
-	To      string   `xml:"to,attr,omitempty"`
-	Id      string   `xml:"id,attr"`
-	Type    string   `xml:"type,attr"`
+    XMLName xml.Name `xml:"jabber:client iq"`
+    From    string   `xml:"from,attr,omitempty"`
+    To      string   `xml:"to,attr,omitempty"`
+    Id      string   `xml:"id,attr"`
+    Type    string   `xml:"type,attr"`
 
-	Error  *XMPPStanzaError    `xml:",omitempty"`
-	Bind   *XMPPBind           `xml:",omitempty"`
-	Roster *XMPPClientIQRoster `xml:",omitempty"`
+    Error  *XMPPStanzaError    `xml:",omitempty"`
+    Bind   *XMPPBind           `xml:",omitempty"`
+    Roster *XMPPClientIQRoster `xml:",omitempty"`
 }
 
 type XMPPClientIQRoster struct {
-	XMLName xml.Name `xml:"jabber:iq:roster query"`
+    XMLName xml.Name `xml:"jabber:iq:roster query"`
 }
 
 // RFC6120 Section 8.2.1
@@ -347,14 +355,14 @@ type XMPPClientIQRoster struct {
 // 'to' address, a server SHOULD attempt to route or deliver it to the intended recipient
 // (see Section 10 for general routing and delivery rules related to XML stanzas).
 type XMPPClientMessage struct {
-	XMLName xml.Name `xml:"jabber:client message"`
-	From    string   `xml:"from,attr"`
-	To      string   `xml:"from,attr"`
-	Type    string   `xml:"type,attr"`
-	XmlLang string   `xml:"xml:lang,attr"`
-	Body    string   `xml:"body"`
+    XMLName xml.Name `xml:"jabber:client message"`
+    From    string   `xml:"from,attr"`
+    To      string   `xml:"to,attr"`
+    Type    string   `xml:"type,attr"`
+    XmlLang string   `xml:"xml:lang,attr"`
+    Body    string   `xml:"body"`
 
-	Error *XMPPStanzaError `xml:",omitempty"`
+    Error *XMPPStanzaError `xml:",omitempty"`
 }
 
 // RFC6120 Section 8.2.2
@@ -370,57 +378,57 @@ type XMPPClientMessage struct {
 // XMPP entity. See Section 10 for general routing and delivery rules related to XML stanzas,
 // and [XMPP‑IM] for rules specific to presence applications.
 type XMPPClientPresence struct {
-	XMLName xml.Name `xml:"jabber:client presence"`
-	XmlLang string   `xml:"xml:lang,attr"`
-	Show    string   `xml:"show",omitempty`
-	Status  string   `xml:"status",omitempty`
+    XMLName xml.Name `xml:"jabber:client presence"`
+    XmlLang string   `xml:"xml:lang,attr"`
+    Show    string   `xml:"show",omitempty`
+    Status  string   `xml:"status",omitempty`
 
-	Error *XMPPStanzaError `xml:",omitempty"`
+    Error *XMPPStanzaError `xml:",omitempty"`
 }
 
 // RFC6120 Section 4.9
 type XMPPStreamError struct {
-	XMLName xml.Name `xml:"stream:error"`
+    XMLName xml.Name `xml:"stream:error"`
 
-	NotWellFormed              *XMPPStreamErrorNotWellFormed          `xml:",omitempty"`
-	InvalidNamespace           *XMPPStreamErrorInvalidNamespace       `xml:",omitempty"`
-	HostUnknown                *XMPPStreamErrorHostUnknown            `xml:",omitempty"`
-	BadFormat                  *XMPPStreamErrorBadFormat              `xml:",omitempty"`
-	BadNamespacePrefix         *XMPPStreamErrorBadNamespacePrefix     `xml:",omitempty"`
-	Conflict                   *XMPPStreamErrorConflict               `xml:",omitempty"`
-	ConnectionTimeout          *XMPPStreamErrorConnectionTimeout      `xml:",omitempty"`
-	HostGone                   *XMPPStreamErrorHostGone               `xml:",omitempty"`
-	ImproperAddressing         *XMPPStreamErrorImproperAddressing     `xml:",omitempty"`
-	InternalServerError        *XMPPStreamErrorInternalServerError    `xml:",omitempty"`
-	XMPPStreamErrorInvalidFrom *XMPPStreamErrorInvalidFrom            `xml:",omitempty"`
-	InvalidXML                 *XMPPStreamErrorInvalidXML             `xml:",omitempty"`
-	NotAuthorized              *XMPPStreamErrorNotAuthorized          `xml:",omitempty"`
-	PolicyViolation            *XMPPStreamErrorPolicyViolation        `xml:",omitempty"`
-	RemoteConnectionFailed     *XMPPStreamErrorRemoteConnectionFailed `xml:",omitempty"`
-	Reset                      *XMPPStreamErrorReset                  `xml:",omitempty"`
-	ResourceConstraint         *XMPPStreamErrorResourceConstraint     `xml:",omitempty"`
-	RestrictedXML              *XMPPStreamErrorRestrictedXML          `xml:",omitempty"`
-	SeeOtherHost               *XMPPStreamErrorSeeOtherHost           `xml:",omitempty"`
-	SystemShutdown             *XMPPStreamErrorSystemShutdown         `xml:",omitempty"`
-	UndefinedCondition         *XMPPStreamErrorUndefinedCondition     `xml:",omitempty"`
-	UnsupportedEncoding        *XMPPStreamErrorUnsupportedEncoding    `xml:",omitempty"`
-	UnsupportedFeature         *XMPPStreamErrorUnsupportedFeature     `xml:",omitempty"`
-	UnsupportedStanzaType      *XMPPStreamErrorUnsupportedStanzaType  `xml:",omitempty"`
-	UnsupportedVersion         *XMPPStreamErrorUnsupportedVersion     `xml:",omitempty"`
+    NotWellFormed              *XMPPStreamErrorNotWellFormed          `xml:",omitempty"`
+    InvalidNamespace           *XMPPStreamErrorInvalidNamespace       `xml:",omitempty"`
+    HostUnknown                *XMPPStreamErrorHostUnknown            `xml:",omitempty"`
+    BadFormat                  *XMPPStreamErrorBadFormat              `xml:",omitempty"`
+    BadNamespacePrefix         *XMPPStreamErrorBadNamespacePrefix     `xml:",omitempty"`
+    Conflict                   *XMPPStreamErrorConflict               `xml:",omitempty"`
+    ConnectionTimeout          *XMPPStreamErrorConnectionTimeout      `xml:",omitempty"`
+    HostGone                   *XMPPStreamErrorHostGone               `xml:",omitempty"`
+    ImproperAddressing         *XMPPStreamErrorImproperAddressing     `xml:",omitempty"`
+    InternalServerError        *XMPPStreamErrorInternalServerError    `xml:",omitempty"`
+    XMPPStreamErrorInvalidFrom *XMPPStreamErrorInvalidFrom            `xml:",omitempty"`
+    InvalidXML                 *XMPPStreamErrorInvalidXML             `xml:",omitempty"`
+    NotAuthorized              *XMPPStreamErrorNotAuthorized          `xml:",omitempty"`
+    PolicyViolation            *XMPPStreamErrorPolicyViolation        `xml:",omitempty"`
+    RemoteConnectionFailed     *XMPPStreamErrorRemoteConnectionFailed `xml:",omitempty"`
+    Reset                      *XMPPStreamErrorReset                  `xml:",omitempty"`
+    ResourceConstraint         *XMPPStreamErrorResourceConstraint     `xml:",omitempty"`
+    RestrictedXML              *XMPPStreamErrorRestrictedXML          `xml:",omitempty"`
+    SeeOtherHost               *XMPPStreamErrorSeeOtherHost           `xml:",omitempty"`
+    SystemShutdown             *XMPPStreamErrorSystemShutdown         `xml:",omitempty"`
+    UndefinedCondition         *XMPPStreamErrorUndefinedCondition     `xml:",omitempty"`
+    UnsupportedEncoding        *XMPPStreamErrorUnsupportedEncoding    `xml:",omitempty"`
+    UnsupportedFeature         *XMPPStreamErrorUnsupportedFeature     `xml:",omitempty"`
+    UnsupportedStanzaType      *XMPPStreamErrorUnsupportedStanzaType  `xml:",omitempty"`
+    UnsupportedVersion         *XMPPStreamErrorUnsupportedVersion     `xml:",omitempty"`
 
-	// RFC6120 Section 4.9.4
-	//
-	// As noted, an application MAY provide application-specific stream error information
-	// by including a properly namespaced child in the error element. The application-specific
-	// element SHOULD supplement or further qualify a defined element. Thus, the <error/>
-	// element will contain two or three child elements.
-	ApplicationSpecificConditions string `xml:",innerxml,omitempty"`
+    // RFC6120 Section 4.9.4
+    //
+    // As noted, an application MAY provide application-specific stream error information
+    // by including a properly namespaced child in the error element. The application-specific
+    // element SHOULD supplement or further qualify a defined element. Thus, the <error/>
+    // element will contain two or three child elements.
+    ApplicationSpecificConditions string `xml:",innerxml,omitempty"`
 }
 
 type XMPPStreamErrorDescriptiveText struct {
-	XMLName xml.Name `xml:"urn:ietf:params:xml:ns:xmpp-streams text"`
-	XmlLang string   `xml:"xml:lang,attr"`
-	Text    string   `xml:",chardata"`
+    XMLName xml.Name `xml:"urn:ietf:params:xml:ns:xmpp-streams text"`
+    XmlLang string   `xml:"xml:lang,attr"`
+    Text    string   `xml:",chardata"`
 }
 
 // RFC6120 Section 4.9.3.1
@@ -440,8 +448,8 @@ type XMPPStreamErrorDescriptiveText struct {
 //
 // The initiating entity has sent XML that violates the well-formedness rules of [XML] or [XML‑NAMES].
 type XMPPStreamErrorNotWellFormed struct {
-	XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-streams not-well-formed"`
-	Text    *XMPPStreamErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-streams not-well-formed"`
+    Text    *XMPPStreamErrorDescriptiveText `xml:",omitempty"`
 }
 
 // RFC6120 Section 4.9.3.10
@@ -450,8 +458,8 @@ type XMPPStreamErrorNotWellFormed struct {
 // (see Section 11.2) or the content namespace declared as the default namespace is not
 // supported (e.g., something other than "jabber:client" or "jabber:server").
 type XMPPStreamErrorInvalidNamespace struct {
-	XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-streams invalid-namespace"`
-	Text    *XMPPStreamErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-streams invalid-namespace"`
+    Text    *XMPPStreamErrorDescriptiveText `xml:",omitempty"`
 }
 
 // RFC6120 Section 4.9.3.6
@@ -459,13 +467,13 @@ type XMPPStreamErrorInvalidNamespace struct {
 // The value of the 'to' attribute provided in the initial stream header does not correspond
 // to an FQDN that is serviced by the receiving entity.
 type XMPPStreamErrorHostUnknown struct {
-	XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-streams host-unknown"`
-	Text    *XMPPStreamErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-streams host-unknown"`
+    Text    *XMPPStreamErrorDescriptiveText `xml:",omitempty"`
 }
 
 type XMPPStreamErrorBadFormat struct {
-	XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-streams bad-format"`
-	Text    *XMPPStreamErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-streams bad-format"`
+    Text    *XMPPStreamErrorDescriptiveText `xml:",omitempty"`
 }
 
 // RFC6120 Section 4.9.3.2
@@ -473,8 +481,8 @@ type XMPPStreamErrorBadFormat struct {
 // The entity has sent a namespace prefix that is unsupported,
 // or has sent no namespace prefix on an element that needs such a prefix
 type XMPPStreamErrorBadNamespacePrefix struct {
-	XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-streams bad-namespace-prefix"`
-	Text    *XMPPStreamErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-streams bad-namespace-prefix"`
+    Text    *XMPPStreamErrorDescriptiveText `xml:",omitempty"`
 }
 
 // RFC6120 Section 4.9.3.3
@@ -484,8 +492,8 @@ type XMPPStreamErrorBadNamespacePrefix struct {
 // or (2) is refusing a new stream for this entity because allowing the new stream
 // would conflict with an existing stream
 type XMPPStreamErrorConflict struct {
-	XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-streams conflict"`
-	Text    *XMPPStreamErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-streams conflict"`
+    Text    *XMPPStreamErrorDescriptiveText `xml:",omitempty"`
 }
 
 // RFC6120 Section 4.9.3.4
@@ -496,8 +504,8 @@ type XMPPStreamErrorConflict struct {
 // keepalives as specified under Section 4.4, XMPP-level pings as defined in [XEP‑0199],
 // and XMPP Stream Management as defined in [XEP‑0198].
 type XMPPStreamErrorConnectionTimeout struct {
-	XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-streams connection-timeout"`
-	Text    *XMPPStreamErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-streams connection-timeout"`
+    Text    *XMPPStreamErrorDescriptiveText `xml:",omitempty"`
 }
 
 // RFC6120 Section 4.9.3.5
@@ -505,8 +513,8 @@ type XMPPStreamErrorConnectionTimeout struct {
 // The value of the 'to' attribute provided in the initial stream header corresponds to
 // an FQDN that is no longer serviced by the receiving entity.
 type XMPPStreamErrorHostGone struct {
-	XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-streams host-gone"`
-	Text    *XMPPStreamErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-streams host-gone"`
+    Text    *XMPPStreamErrorDescriptiveText `xml:",omitempty"`
 }
 
 // RFC6120 Section 4.9.3.7
@@ -515,8 +523,8 @@ type XMPPStreamErrorHostGone struct {
 // the 'from' or 'to' attribute has no value, or the value violates the rules for XMPP
 // addresses [XMPP‑ADDR].
 type XMPPStreamErrorImproperAddressing struct {
-	XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-streams improper-addressing"`
-	Text    *XMPPStreamErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-streams improper-addressing"`
+    Text    *XMPPStreamErrorDescriptiveText `xml:",omitempty"`
 }
 
 // RFC6120 Section 4.9.3.8
@@ -524,8 +532,8 @@ type XMPPStreamErrorImproperAddressing struct {
 // The server has experienced a misconfiguration or other internal error that prevents
 // it from servicing the stream.
 type XMPPStreamErrorInternalServerError struct {
-	XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-streams internal-server-error"`
-	Text    *XMPPStreamErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-streams internal-server-error"`
+    Text    *XMPPStreamErrorDescriptiveText `xml:",omitempty"`
 }
 
 // RFC6120 Section 4.9.3.9
@@ -534,8 +542,8 @@ type XMPPStreamErrorInternalServerError struct {
 // domain as negotiated (1) between two servers using SASL or Server Dialback, or (2)
 // between a client and a server via SASL authentication and resource binding.
 type XMPPStreamErrorInvalidFrom struct {
-	XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-streams invalid-from"`
-	Text    *XMPPStreamErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-streams invalid-from"`
+    Text    *XMPPStreamErrorDescriptiveText `xml:",omitempty"`
 }
 
 // RFC6120 Section 4.9.3.11
@@ -543,8 +551,8 @@ type XMPPStreamErrorInvalidFrom struct {
 // The entity has sent invalid XML over the stream to a server that performs validation
 // (see Section 11.4).
 type XMPPStreamErrorInvalidXML struct {
-	XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-streams invalid-xml"`
-	Text    *XMPPStreamErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-streams invalid-xml"`
+    Text    *XMPPStreamErrorDescriptiveText `xml:",omitempty"`
 }
 
 // RFC6120 Section 4.9.3.12
@@ -554,8 +562,8 @@ type XMPPStreamErrorInvalidXML struct {
 // to stream negotiation; the receiving entity MUST NOT process the offending data before
 // sending the stream error.
 type XMPPStreamErrorNotAuthorized struct {
-	XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-streams not-authorized"`
-	Text    *XMPPStreamErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-streams not-authorized"`
+    Text    *XMPPStreamErrorDescriptiveText `xml:",omitempty"`
 }
 
 // RFC6120 Section 4.9.3.14
@@ -564,8 +572,8 @@ type XMPPStreamErrorNotAuthorized struct {
 // size limit); the server MAY choose to specify the policy in the <text/> element or in
 // an application-specific condition element.
 type XMPPStreamErrorPolicyViolation struct {
-	XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-streams policy-violation"`
-	Text    *XMPPStreamErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-streams policy-violation"`
+    Text    *XMPPStreamErrorDescriptiveText `xml:",omitempty"`
 }
 
 // RFC6120 Section 4.9.3.15
@@ -576,8 +584,8 @@ type XMPPStreamErrorPolicyViolation struct {
 // administrative domain of the XMPP service provider, in which case the
 // <internal-server-error/> condition is more appropriate.
 type XMPPStreamErrorRemoteConnectionFailed struct {
-	XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-streams remote-connection-failed"`
-	Text    *XMPPStreamErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-streams remote-connection-failed"`
+    Text    *XMPPStreamErrorDescriptiveText `xml:",omitempty"`
 }
 
 // RFC6120 Section 4.9.3.16
@@ -590,16 +598,16 @@ type XMPPStreamErrorRemoteConnectionFailed struct {
 // (e.g., via TLS and SASL), which means that encryption and authentication need to be
 // negotiated again for the new stream (e.g., TLS session resumption cannot be used).
 type XMPPStreamErrorReset struct {
-	XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-streams reset"`
-	Text    *XMPPStreamErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-streams reset"`
+    Text    *XMPPStreamErrorDescriptiveText `xml:",omitempty"`
 }
 
 // RFC6120 Section 4.9.3.17
 //
 // The server lacks the system resources necessary to service the stream.
 type XMPPStreamErrorResourceConstraint struct {
-	XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-streams resource-constraint"`
-	Text    *XMPPStreamErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-streams resource-constraint"`
+    Text    *XMPPStreamErrorDescriptiveText `xml:",omitempty"`
 }
 
 // RFC6120 Section 4.9.3.18
@@ -607,8 +615,8 @@ type XMPPStreamErrorResourceConstraint struct {
 // The entity has attempted to send restricted XML features such as a comment, processing
 // instruction, DTD subset, or XML entity reference (see Section 11.1).
 type XMPPStreamErrorRestrictedXML struct {
-	XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-streams restricted-xml"`
-	Text    *XMPPStreamErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-streams restricted-xml"`
+    Text    *XMPPStreamErrorDescriptiveText `xml:",omitempty"`
 }
 
 // RFC6120 Section 4.9.3.19
@@ -626,16 +634,16 @@ type XMPPStreamErrorRestrictedXML struct {
 // the initiating entity MUST resolve the FQDN specified in the <see-other-host/> element as
 // described under Section 3.2.
 type XMPPStreamErrorSeeOtherHost struct {
-	XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-streams see-other-host"`
-	Text    *XMPPStreamErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-streams see-other-host"`
+    Text    *XMPPStreamErrorDescriptiveText `xml:",omitempty"`
 }
 
 // RFC6120 Section 4.9.3.20
 //
 // The server is being shut down and all active streams are being closed.
 type XMPPStreamErrorSystemShutdown struct {
-	XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-streams system-shutdown"`
-	Text    *XMPPStreamErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-streams system-shutdown"`
+    Text    *XMPPStreamErrorDescriptiveText `xml:",omitempty"`
 }
 
 // RFC6120 Section 4.9.3.21
@@ -644,9 +652,9 @@ type XMPPStreamErrorSystemShutdown struct {
 // this error condition SHOULD NOT be used except in conjunction with an application-specific
 // condition.
 type XMPPStreamErrorUndefinedCondition struct {
-	XMLName  xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-streams undefined-condition"`
-	Text     *XMPPStreamErrorDescriptiveText `xml:",omitempty"`
-	AppError interface{}
+    XMLName  xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-streams undefined-condition"`
+    Text     *XMPPStreamErrorDescriptiveText `xml:",omitempty"`
+    AppError interface{}
 }
 
 // RFC6120 Section 4.9.3.22
@@ -655,8 +663,8 @@ type XMPPStreamErrorUndefinedCondition struct {
 // server (see Section 11.6) or has otherwise improperly encoded the stream (e.g., by violating
 // the rules of the [UTF‑8] encoding).
 type XMPPStreamErrorUnsupportedEncoding struct {
-	XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-streams unsupported-encoding"`
-	Text    *XMPPStreamErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-streams unsupported-encoding"`
+    Text    *XMPPStreamErrorDescriptiveText `xml:",omitempty"`
 }
 
 // RFC6120 Section 4.9.3.23
@@ -665,8 +673,8 @@ type XMPPStreamErrorUnsupportedEncoding struct {
 // entity does not support, and has offered no other mandatory-to-negotiate feature alongside the
 // unsupported feature.
 type XMPPStreamErrorUnsupportedFeature struct {
-	XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-streams unsupported-feature"`
-	Text    *XMPPStreamErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-streams unsupported-feature"`
+    Text    *XMPPStreamErrorDescriptiveText `xml:",omitempty"`
 }
 
 // RFC6120 Section 4.9.3.24
@@ -676,8 +684,8 @@ type XMPPStreamErrorUnsupportedFeature struct {
 // or because the receiving entity does not understand the element name for the applicable
 // namespace (which might be the content namespace declared as the default namespace).
 type XMPPStreamErrorUnsupportedStanzaType struct {
-	XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-streams unsupported-stanza-type"`
-	Text    *XMPPStreamErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-streams unsupported-stanza-type"`
+    Text    *XMPPStreamErrorDescriptiveText `xml:",omitempty"`
 }
 
 // RFC6120 Section 4.9.3.25
@@ -685,13 +693,13 @@ type XMPPStreamErrorUnsupportedStanzaType struct {
 // The 'version' attribute provided by the initiating entity in the stream header
 // specifies a version of XMPP that is not supported by the server.
 type XMPPStreamErrorUnsupportedVersion struct {
-	XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-streams unsupported-version"`
-	Text    *XMPPStreamErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-streams unsupported-version"`
+    Text    *XMPPStreamErrorDescriptiveText `xml:",omitempty"`
 }
 
 type XMPPStanzaErrorDescriptiveText struct {
-	XMLName xml.Name `xml:"urn:ietf:params:xml:ns:xmpp-stanzas text"`
-	XmlLang string   `xml:"xml:lang,attr"`
+    XMLName xml.Name `xml:"urn:ietf:params:xml:ns:xmpp-stanzas text"`
+    XmlLang string   `xml:"xml:lang,attr"`
 }
 
 // RFC6120 Section 8.3
@@ -709,33 +717,33 @@ type XMPPStanzaErrorDescriptiveText struct {
 //   a hint regarding actions that the sender might be able to take in an effort to remedy the
 //   error (however, it is not always possible to remedy the error)
 type XMPPStanzaError struct {
-	XMLName xml.Name `xml:"error"`
-	Type    string   `xml:"type,attr"`
+    XMLName xml.Name `xml:"error"`
+    Type    string   `xml:"type,attr"`
 
-	BadRequest            *XMPPStanzaErrorBadRequest            `xml:",omitempty"`
-	Conflict              *XMPPStanzaErrorConflict              `xml:",omitempty"`
-	FeatureNotImplemented *XMPPStanzaErrorFeatureNotImplemented `xml:",omitempty"`
-	Forbidden             *XMPPStanzaErrorForbidden             `xml:",omitempty"`
-	Gone                  *XMPPStanzaErrorGone                  `xml:",omitempty"`
-	InternalServerError   *XMPPStanzaErrorInternalServerError   `xml:",omitempty"`
-	ItemNotFound          *XMPPStanzaErrorItemNotFound          `xml:",omitempty"`
-	JIDMalformed          *XMPPStanzaErrorJIDMalformed          `xml:",omitempty"`
-	NotAcceptable         *XMPPStanzaErrorNotAcceptable         `xml:",omitempty"`
-	NotAllowed            *XMPPStanzaErrorNotAllowed            `xml:",omitempty"`
-	NotAuthorized         *XMPPStanzaErrorNotAuthorized         `xml:",omitempty"`
-	PolicyViolation       *XMPPStanzaErrorPolicyVoilation       `xml:",omitempty"`
-	RecipientUnavailable  *XMPPStanzaErrorRecipientUnavailable  `xml:",omitempty"`
-	Redirect              *XMPPStanzaErrorRedirect              `xml:",omitempty"`
-	RegistrationRequired  *XMPPStanzaErrorRegistrationRequired  `xml:",omitempty"`
-	RemoteServerTimeout   *XMPPStanzaErrorRemoteServerTimeout   `xml:",omitempty"`
-	RemoteServerNotFound  *XMPPStanzaErrorRemoteServerNotFound  `xml:",omitempty"`
-	ResourceConstraint    *XMPPStanzaErrorResourceConstraint    `xml:",omitempty"`
-	ServiceUnavailable    *XMPPStanzaErrorServiceUnavailable    `xml:",omitempty"`
-	SubscriptionRequired  *XMPPStanzaErrorSubscriptionRequired  `xml:",omitempty"`
-	UndefinedCondition    *XMPPStanzaErrorUndefinedCondition    `xml:",omitempty"`
-	UnexpectedRequest     *XMPPStanzaErrorUnexpectedRequest     `xml:",omitempty"`
+    BadRequest            *XMPPStanzaErrorBadRequest            `xml:",omitempty"`
+    Conflict              *XMPPStanzaErrorConflict              `xml:",omitempty"`
+    FeatureNotImplemented *XMPPStanzaErrorFeatureNotImplemented `xml:",omitempty"`
+    Forbidden             *XMPPStanzaErrorForbidden             `xml:",omitempty"`
+    Gone                  *XMPPStanzaErrorGone                  `xml:",omitempty"`
+    InternalServerError   *XMPPStanzaErrorInternalServerError   `xml:",omitempty"`
+    ItemNotFound          *XMPPStanzaErrorItemNotFound          `xml:",omitempty"`
+    JIDMalformed          *XMPPStanzaErrorJIDMalformed          `xml:",omitempty"`
+    NotAcceptable         *XMPPStanzaErrorNotAcceptable         `xml:",omitempty"`
+    NotAllowed            *XMPPStanzaErrorNotAllowed            `xml:",omitempty"`
+    NotAuthorized         *XMPPStanzaErrorNotAuthorized         `xml:",omitempty"`
+    PolicyViolation       *XMPPStanzaErrorPolicyVoilation       `xml:",omitempty"`
+    RecipientUnavailable  *XMPPStanzaErrorRecipientUnavailable  `xml:",omitempty"`
+    Redirect              *XMPPStanzaErrorRedirect              `xml:",omitempty"`
+    RegistrationRequired  *XMPPStanzaErrorRegistrationRequired  `xml:",omitempty"`
+    RemoteServerTimeout   *XMPPStanzaErrorRemoteServerTimeout   `xml:",omitempty"`
+    RemoteServerNotFound  *XMPPStanzaErrorRemoteServerNotFound  `xml:",omitempty"`
+    ResourceConstraint    *XMPPStanzaErrorResourceConstraint    `xml:",omitempty"`
+    ServiceUnavailable    *XMPPStanzaErrorServiceUnavailable    `xml:",omitempty"`
+    SubscriptionRequired  *XMPPStanzaErrorSubscriptionRequired  `xml:",omitempty"`
+    UndefinedCondition    *XMPPStanzaErrorUndefinedCondition    `xml:",omitempty"`
+    UnexpectedRequest     *XMPPStanzaErrorUnexpectedRequest     `xml:",omitempty"`
 
-	ApplicationSpecificConditions string `xml:",any,innerxml,omitempty"`
+    ApplicationSpecificConditions string `xml:",any,innerxml,omitempty"`
 }
 
 // RFC6120 Section 8.3.3.1
@@ -745,8 +753,8 @@ type XMPPStanzaError struct {
 // 'type' attribute, or an element that is qualified by a recognized namespace but that violates
 // the defined syntax for the element); the associated error type SHOULD be "modify".
 type XMPPStanzaErrorBadRequest struct {
-	XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-stanzas bad-request"`
-	Text    *XMPPStanzaErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-stanzas bad-request"`
+    Text    *XMPPStanzaErrorDescriptiveText `xml:",omitempty"`
 }
 
 // RFC6120 Section 8.3.3.2
@@ -754,8 +762,8 @@ type XMPPStanzaErrorBadRequest struct {
 // Access cannot be granted because an existing resource exists with the same name or address;
 // the associated error type SHOULD be "cancel".
 type XMPPStanzaErrorConflict struct {
-	XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-stanzas conflict"`
-	Text    *XMPPStanzaErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-stanzas conflict"`
+    Text    *XMPPStanzaErrorDescriptiveText `xml:",omitempty"`
 }
 
 // RFC6120 Section 8.3.3.3
@@ -765,8 +773,8 @@ type XMPPStanzaErrorConflict struct {
 // understands the namespace but does not recognize the element name); the associated error
 // type SHOULD be "cancel" or "modify".
 type XMPPStanzaErrorFeatureNotImplemented struct {
-	XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-stanzas feature-not-implemented"`
-	Text    *XMPPStanzaErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-stanzas feature-not-implemented"`
+    Text    *XMPPStanzaErrorDescriptiveText `xml:",omitempty"`
 }
 
 // RFC6120 Section 8.3.3.4
@@ -776,8 +784,8 @@ type XMPPStanzaErrorFeatureNotImplemented struct {
 // typically relates to authorization rather than authentication); the associated error
 // type SHOULD be "auth".
 type XMPPStanzaErrorForbidden struct {
-	XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-stanzas forbidden"`
-	Text    *XMPPStanzaErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-stanzas forbidden"`
+    Text    *XMPPStanzaErrorDescriptiveText `xml:",omitempty"`
 }
 
 // RFC6120 Section 8.3.3.5
@@ -790,8 +798,8 @@ type XMPPStanzaErrorForbidden struct {
 // Internationalized Resource Identifier [IRI] at which the entity can be contacted,
 // typically an XMPP IRI as specified in [XMPP‑URI]).
 type XMPPStanzaErrorGone struct {
-	XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-stanzas gone"`
-	Text    *XMPPStanzaErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-stanzas gone"`
+    Text    *XMPPStanzaErrorDescriptiveText `xml:",omitempty"`
 }
 
 // RFC6120 Section 8.3.3.6
@@ -799,8 +807,8 @@ type XMPPStanzaErrorGone struct {
 // The server has experienced a misconfiguration or other internal error that prevents
 // it from processing the stanza; the associated error type SHOULD be "cancel".
 type XMPPStanzaErrorInternalServerError struct {
-	XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-stanzas internal-server-error"`
-	Text    *XMPPStanzaErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-stanzas internal-server-error"`
+    Text    *XMPPStanzaErrorDescriptiveText `xml:",omitempty"`
 }
 
 // RFC6120 Section 8.3.3.7
@@ -808,8 +816,8 @@ type XMPPStanzaErrorInternalServerError struct {
 // The addressed JID or item requested cannot be found; the associated error type
 // SHOULD be "cancel".
 type XMPPStanzaErrorItemNotFound struct {
-	XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-stanzas item-not-found"`
-	Text    *XMPPStanzaErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-stanzas item-not-found"`
+    Text    *XMPPStanzaErrorDescriptiveText `xml:",omitempty"`
 }
 
 // RFC6120 Section 8.3.3.8
@@ -819,8 +827,8 @@ type XMPPStanzaErrorItemNotFound struct {
 // violates the rules defined in [XMPP‑ADDR]; the associated error type SHOULD be
 // "modify".
 type XMPPStanzaErrorJIDMalformed struct {
-	XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-stanzas jid-malformed"`
-	Text    *XMPPStanzaErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-stanzas jid-malformed"`
+    Text    *XMPPStanzaErrorDescriptiveText `xml:",omitempty"`
 }
 
 // RFC6120 Section 8.3.3.9
@@ -831,8 +839,8 @@ type XMPPStanzaErrorJIDMalformed struct {
 // configuration parameters needed by the recipient); the associated error type
 // SHOULD be "modify".
 type XMPPStanzaErrorNotAcceptable struct {
-	XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-stanzas not-acceptable"`
-	Text    *XMPPStanzaErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-stanzas not-acceptable"`
+    Text    *XMPPStanzaErrorDescriptiveText `xml:",omitempty"`
 }
 
 // RFC6120 Section 8.3.3.10
@@ -841,8 +849,8 @@ type XMPPStanzaErrorNotAcceptable struct {
 // sending to entities at a blacklisted domain); the associated error type SHOULD
 // be "cancel".
 type XMPPStanzaErrorNotAllowed struct {
-	XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-stanzas not-allowed"`
-	Text    *XMPPStanzaErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-stanzas not-allowed"`
+    Text    *XMPPStanzaErrorDescriptiveText `xml:",omitempty"`
 }
 
 // RFC6120 Section 8.3.3.11
@@ -854,8 +862,8 @@ type XMPPStanzaErrorNotAllowed struct {
 // typically used in relation to authentication); the associated error type SHOULD
 // be "auth".
 type XMPPStanzaErrorNotAuthorized struct {
-	XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-stanzas not-authorized"`
-	Text    *XMPPStanzaErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-stanzas not-authorized"`
+    Text    *XMPPStanzaErrorDescriptiveText `xml:",omitempty"`
 }
 
 // RFC6120 Section 8.3.3.12
@@ -865,8 +873,8 @@ type XMPPStanzaErrorNotAuthorized struct {
 // the associated error type SHOULD be "modify" or "wait" depending on the policy
 // being violated.
 type XMPPStanzaErrorPolicyVoilation struct {
-	XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-stanzas policy-violation"`
-	Text    *XMPPStanzaErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-stanzas policy-violation"`
+    Text    *XMPPStanzaErrorDescriptiveText `xml:",omitempty"`
 }
 
 // RFC6120 Section 8.3.3.13
@@ -874,8 +882,8 @@ type XMPPStanzaErrorPolicyVoilation struct {
 // The intended recipient is temporarily unavailable, undergoing maintenance, etc.;
 // the associated error type SHOULD be "wait".
 type XMPPStanzaErrorRecipientUnavailable struct {
-	XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-stanzas recipient-unavailable"`
-	Text    *XMPPStanzaErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-stanzas recipient-unavailable"`
+    Text    *XMPPStanzaErrorDescriptiveText `xml:",omitempty"`
 }
 
 // RFC6120 Section 8.3.3.14
@@ -887,8 +895,8 @@ type XMPPStanzaErrorRecipientUnavailable struct {
 // character data of the <redirect/> element (which MUST be a URI or IRI with which
 // the sender can communicate, typically an XMPP IRI as specified in [XMPP‑URI]).
 type XMPPStanzaErrorRedirect struct {
-	XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-stanzas redirect"`
-	Text    *XMPPStanzaErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-stanzas redirect"`
+    Text    *XMPPStanzaErrorDescriptiveText `xml:",omitempty"`
 }
 
 // RFC6120 Section 8.3.3.15
@@ -899,8 +907,8 @@ type XMPPStanzaErrorRedirect struct {
 // services, which traditionally required registration in order to use the gateway
 // [XEP‑0100]); the associated error type SHOULD be "auth".
 type XMPPStanzaErrorRegistrationRequired struct {
-	XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-stanzas registration-required"`
-	Text    *XMPPStanzaErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-stanzas registration-required"`
+    Text    *XMPPStanzaErrorDescriptiveText `xml:",omitempty"`
 }
 
 // RFC6120 Section 8.3.3.16
@@ -911,8 +919,8 @@ type XMPPStanzaErrorRegistrationRequired struct {
 // but there is no response on the IANA-registered port 5269); the associated error
 // type SHOULD be "cancel".
 type XMPPStanzaErrorRemoteServerNotFound struct {
-	XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-stanzas remote-server-not-found"`
-	Text    *XMPPStanzaErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-stanzas remote-server-not-found"`
+    Text    *XMPPStanzaErrorDescriptiveText `xml:",omitempty"`
 }
 
 // RFC6120 Section 8.3.3.17
@@ -926,8 +934,8 @@ type XMPPStanzaErrorRemoteServerNotFound struct {
 // is of a more permanent nature, e.g., the remote server is found but it cannot be
 // authenticated or it violates security policies).
 type XMPPStanzaErrorRemoteServerTimeout struct {
-	XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-stanzas remote-server-timeout"`
-	Text    *XMPPStanzaErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-stanzas remote-server-timeout"`
+    Text    *XMPPStanzaErrorDescriptiveText `xml:",omitempty"`
 }
 
 // RFC6120 Section 8.3.3.18
@@ -935,8 +943,8 @@ type XMPPStanzaErrorRemoteServerTimeout struct {
 // The server or recipient is busy or lacks the system resources necessary to service
 // the request; the associated error type SHOULD be "wait".
 type XMPPStanzaErrorResourceConstraint struct {
-	XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-stanzas resource-constraint"`
-	Text    *XMPPStanzaErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-stanzas resource-constraint"`
+    Text    *XMPPStanzaErrorDescriptiveText `xml:",omitempty"`
 }
 
 // RFC6120 Section 8.3.3.19
@@ -944,8 +952,8 @@ type XMPPStanzaErrorResourceConstraint struct {
 // The server or recipient does not currently provide the requested service; the
 // associated error type SHOULD be "cancel".
 type XMPPStanzaErrorServiceUnavailable struct {
-	XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-stanzas service-unavailable"`
-	Text    *XMPPStanzaErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-stanzas service-unavailable"`
+    Text    *XMPPStanzaErrorDescriptiveText `xml:",omitempty"`
 }
 
 // RFC6120 Section 8.3.3.20
@@ -956,8 +964,8 @@ type XMPPStanzaErrorServiceUnavailable struct {
 // data feeds for XMPP publish-subscribe as defined in [XEP‑0060]); the associated
 // error type SHOULD be "auth".
 type XMPPStanzaErrorSubscriptionRequired struct {
-	XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-stanzas subscription-required"`
-	Text    *XMPPStanzaErrorDescriptiveText `xml:",omitempty"`
+    XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-stanzas subscription-required"`
+    Text    *XMPPStanzaErrorDescriptiveText `xml:",omitempty"`
 }
 
 // RFC6120 Section 8.3.3.21
@@ -966,9 +974,9 @@ type XMPPStanzaErrorSubscriptionRequired struct {
 // list; any error type can be associated with this condition, and it SHOULD NOT
 // be used except in conjunction with an application-specific condition.
 type XMPPStanzaErrorUndefinedCondition struct {
-	XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-stanzas undefined-condition"`
-	Text    *XMPPStanzaErrorDescriptiveText `xml:",omitempty"`
-	Error   string                          `xml:",innerxml,omitempty"`
+    XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-stanzas undefined-condition"`
+    Text    *XMPPStanzaErrorDescriptiveText `xml:",omitempty"`
+    Error   string                          `xml:",innerxml,omitempty"`
 }
 
 // RFC6120 Section 8.3.3.22
@@ -977,9 +985,9 @@ type XMPPStanzaErrorUndefinedCondition struct {
 // time (e.g., the request was out of order); the associated error type SHOULD be
 // "wait" or "modify".
 type XMPPStanzaErrorUnexpectedRequest struct {
-	XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-stanzas unexpected-request"`
-	Text    *XMPPStanzaErrorDescriptiveText `xml:",omitempty"`
-	Error   string                          `xml:",innerxml,omitempty"`
+    XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-stanzas unexpected-request"`
+    Text    *XMPPStanzaErrorDescriptiveText `xml:",omitempty"`
+    Error   string                          `xml:",innerxml,omitempty"`
 }
 
 const stream_response_begin_fmt = `<stream:stream from='%s' to='%s' version='%s' xml:lang='%s' id='%s' xmlns='%s' xmlns:stream='%s'>`
@@ -987,8 +995,8 @@ const stream_response_begin_fmt = `<stream:stream from='%s' to='%s' version='%s'
 const stream_end_fmt = `</stream:stream>`
 
 func make_stream_begin(s *XMPPStream) string {
-	return fmt.Sprintf(stream_response_begin_fmt,
-		s.From, s.To, s.Version,
-		s.XmlLang, s.Id, XMLNS_JABBER_CLIENT,
-		XMLNS_STREAM)
+    return fmt.Sprintf(stream_response_begin_fmt,
+        s.From, s.To, s.Version,
+        s.XmlLang, s.Id, XMLNS_JABBER_CLIENT,
+        XMLNS_STREAM)
 }

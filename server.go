@@ -1,224 +1,117 @@
 package xmpp
 
 import (
-	"errors"
-	"log"
-	"net"
+    "encoding/xml"
+    "log"
+    "net"
 )
 
-type XMPPClientInfo struct {
+type ConnectionHandler func(*Connection) bool
+type ProcessingHandler func(*Connection, interface{}) bool
+
+type Server struct {
+    listener    net.Listener
+    connHandler ConnectionHandler
+    procHandler ProcessingHandler
 }
 
-type XMPPOptions struct {
-	SASLMechanisms     []string
-	SASLServerHandlers []XMPPSASLServerMechanismHandler
-	SASLClientHandlers []XMPPSASLClientMechanismHandler
-	IQHandler          func(iq *XMPPClientIQ) (interface{}, error)
-	MessageHandler     func(msg *XMPPClientMessage) (interface{}, error)
-	PresenceHandler    func(prsc *XMPPClientPresence) (interface{}, error)
-	Handlers           map[string]func(interface{}) (interface{}, error)
-	ServerURL          string
-	ListenIP           string
+type Connection struct {
+    server  *Server
+    conn    net.Conn
+    decoder *Decoder
+    wchan   chan []byte
 }
 
-func StreamHeaderDefaultHandler(c *XMPPClient, s *XMPPStream) error {
-	log.Printf("C: %+v", s)
-	if err := c.ResponseStreamHeader(s.To, s.From, "zh"); err != nil {
-		return err
-	}
+func NewServer(addr string, connHandler ConnectionHandler, procHandler ProcessingHandler) *Server {
+    l, err := net.Listen("tcp", addr)
+    if err != nil {
+        log.Panic(err)
+    }
 
-	if c.State == STATE_RESTART {
-		if err := c.Response(XMPPStreamFeatures{
-			Bind: &XMPPBind{},
-		}); err != nil {
-			return err
-		}
-	} else {
-		if err := c.Response(XMPPStreamFeatures{
-			SASLMechanisms: &XMPPSASLMechanisms{
-				Mechanisms: c.server.opts.SASLMechanisms,
-			},
-		}); err != nil {
-			return err
-		}
-		c.State = STATE_SASL_AUTH
-	}
-
-	return nil
+    if procHandler == nil {
+        log.Panic("ProcessingHandler cannot be nil")
+    }
+    return &Server{
+        listener:    l,
+        connHandler: connHandler,
+        procHandler: procHandler,
+    }
 }
 
-func StreamNegociationDefaultHandler(c *XMPPClient, elem interface{}) error {
+func (s *Server) Run() error {
+    for {
+        conn, err := s.listener.Accept()
+        if err != nil {
+            return nil
+        }
 
-	switch e := elem.(type) {
-	case *XMPPSASLAuth:
-		log.Printf("%+v", e)
+        log.Printf("%s connected", conn.RemoteAddr().String())
+        c := NewConnection(s, conn)
 
-		found := false
-		for index, mec := range c.server.opts.SASLMechanisms {
-			if mec == e.Mechanism {
-				found = true
-				c.srvHandler = c.server.opts.SASLServerHandlers[index]
-				name, ret, err := c.srvHandler.Auth(e.Data)
-				c.BindJID = name
-				c.State = STATE_SASL_AUTH
-				if err := c.Response(ret); err != nil {
-					log.Printf("%+v Err: %s", c.conn.RemoteAddr(), err)
-					return err
-				}
-				if err != nil {
-					log.Printf("%+v Err: %s", c.conn.RemoteAddr(), err)
-					c.srvHandler = nil
-					return err
-				} else {
-					_, e1 := ret.(*XMPPSASLSuccess)
-					if e1 {
-						c.State = STATE_RESTART
-					}
-					_, e2 := ret.(XMPPSASLSuccess)
-					if e2 {
-						c.State = STATE_RESTART
-					}
-				}
+        if s.connHandler != nil && !s.connHandler(c) {
+            conn.Close()
+            continue
+        }
 
-				break
-			}
-		}
-
-		if !found {
-			log.Printf("%+v Err: Invalid Mechanism %s", c.conn.RemoteAddr(), e.Mechanism)
-			if err := c.Response(XMPPSASLFailure{
-				InvalidMechanism: &XMPPSASLErrorInvalidMechanism{},
-			}); err != nil {
-				return err
-			}
-		}
-	case *XMPPSASLResponse:
-		if c.srvHandler == nil {
-			log.Printf("%+v Err: Invalid <response/>", c.conn.RemoteAddr())
-			if err := c.Response(XMPPSASLFailure{
-				MalformedRequest: &XMPPSASLErrorMalformedRequest{},
-			}); err != nil {
-				return err
-			}
-		}
-		name, ret, err := c.srvHandler.Response(e.Data)
-		if err := c.Response(ret); err != nil {
-			log.Printf("%+v Err: %s", c.conn.RemoteAddr(), err)
-			return err
-		}
-		if err != nil {
-			log.Printf("%+v Err: %s", c.conn.RemoteAddr(), err)
-			c.srvHandler = nil
-			return err
-		} else {
-			c.BindJID = name
-		}
-
-	default:
-		log.Printf("%+v Err: Unsupported XML", c.conn.RemoteAddr())
-		if err := c.Response(XMPPSASLFailure{
-			MalformedRequest: &XMPPSASLErrorMalformedRequest{},
-		}); err != nil {
-			return err
-		}
-	}
-
-	return nil
+        go c.process()
+        go c.write()
+    }
 }
 
-func StreamIQDefaultHandler(iq *XMPPClientIQ) (interface{}, error) {
-
-	if iq.Type == "set" {
-		if iq.Bind != nil {
-			log.Printf("From client bind %+v", iq.Bind)
-			if iq.Bind.Resource != "" {
-				log.Printf("Client bind resource %s", iq.Bind.Resource)
-
-				return &XMPPClientIQ{
-					Bind: &XMPPBind{
-						Jid: "abc@abc.com/" + iq.Bind.Resource,
-					},
-					Type: "result",
-					Id:   iq.Id,
-				}, nil
-			} else {
-				genr := "balcony"
-				log.Printf("Client asked server for resournce %s", genr)
-				return &XMPPClientIQ{
-					Bind: &XMPPBind{
-						Jid: "abc@abc.com/" + genr,
-					},
-					Type: "result",
-					Id:   iq.Id,
-				}, nil
-			}
-		}
-	} else if iq.Type == "result" {
-
-	}
-
-	return &XMPPClientIQ{
-		Error: &XMPPStanzaError{
-			BadRequest: &XMPPStanzaErrorBadRequest{},
-		},
-	}, errors.New("Bad Request")
+func NewConnection(s *Server, conn net.Conn) *Connection {
+    return &Connection{
+        server:  s,
+        conn:    conn,
+        decoder: NewDecoder(conn),
+        wchan:   make(chan []byte),
+    }
 }
 
-func StreamPresenceDefaultHandler(presence *XMPPClientPresence) (interface{}, error) {
+func (c *Connection) process() {
+    for {
+        elem, err := c.decoder.GetNextElement()
+        if err != nil {
+            log.Printf("%s Err: %s", c.conn.RemoteAddr().String(), err)
+            c.EndStream()
+            return
+        }
 
-	log.Printf("Client Present %+v", presence)
-
-	return nil, nil
+        switch t := elem.(type) {
+        case *XMPPStreamEnd:
+            c.EndStream()
+            return
+        case xml.ProcInst:
+            c.Write([]byte(xml.Header))
+        default:
+            if !c.server.procHandler(c, t) {
+                c.EndStream()
+                return
+            }
+        }
+    }
 }
 
-func StreamMessageDefaultHandler(msg *XMPPClientMessage) (interface{}, error) {
-	log.Printf("Client message %+v", msg)
-
-	return nil, nil
+func (c *Connection) write() {
+    for b := range c.wchan {
+        c.conn.Write(b)
+    }
+    log.Printf("%s closed", c.conn.RemoteAddr().String())
 }
 
-type XMPPServer struct {
-	entities map[*XMPPClient]*XMPPClientInfo
-	listener net.Listener
-	opts     *XMPPOptions
-
-	streamHandler      func(*XMPPClient, *XMPPStream) error
-	negociationHandler func(*XMPPClient, interface{}) error
+func (c *Connection) Close() {
+    close(c.wchan)
+    c.conn.Close()
 }
 
-func NewServer(opts *XMPPOptions) (*XMPPServer, error) {
-	s := &XMPPServer{
-		entities:           make(map[*XMPPClient]*XMPPClientInfo),
-		opts:               opts,
-		streamHandler:      StreamHeaderDefaultHandler,
-		negociationHandler: StreamNegociationDefaultHandler,
-	}
-
-	listener, err := net.Listen("tcp", opts.ListenIP)
-	if err != nil {
-		return s, err
-	}
-
-	s.listener = listener
-
-	// Default Handlers
-	//s.SetHandler(TAG_STREAM, StreamHeaderDefaultHandler)
-	//s.SetHandler(TAG_SASL_AUTH, StreamNegociationDefaultHandler)
-	//s.SetHandler(TAG_CLIENT_IQ, StreamIQDefaultHandler)
-	//s.SetHandler(TAG_CLIENT_PRESENCE, StreamPresenceDefaultHandler)
-
-	return s, nil
+func (c *Connection) Write(b []byte) {
+    c.wchan <- b
 }
 
-func (s *XMPPServer) ServeForever() error {
-	for {
-		conn, err := s.listener.Accept()
-		if err != nil {
-			return err
-		}
+func (c *Connection) EndStream() {
+    c.Write([]byte("</stream:stream>"))
+    c.Close()
+}
 
-		c := NewClient(conn, s)
-		s.entities[c] = &XMPPClientInfo{}
-	}
-	return nil
+func (c *Connection) RemoteAddr() net.Addr {
+    return c.conn.RemoteAddr()
 }
