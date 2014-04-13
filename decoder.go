@@ -3,7 +3,6 @@ package xmpp
 import (
     "encoding/xml"
     "errors"
-    "fmt"
     "io"
     // "log"
 )
@@ -70,8 +69,7 @@ func (d *Decoder) ParseElement(startToken xml.StartElement) (interface{}, error)
         element = &XMPPClientMessage{}
 
     default:
-        return nil, errors.New(fmt.Sprintf("XML Element of `%s:%s` cannot be recognized",
-            startToken.Name.Space, startToken.Name.Local))
+        element = &XMPPCustom{}
     }
 
     if err := d.xmlDecoder.DecodeElement(element, &startToken); err != nil {

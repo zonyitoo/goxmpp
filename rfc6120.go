@@ -990,6 +990,11 @@ type XMPPStanzaErrorUnexpectedRequest struct {
     Error   string                          `xml:",innerxml,omitempty"`
 }
 
+type XMPPCustom struct {
+    XMLName xml.Name
+    XML     string `xml:",any"`
+}
+
 const stream_response_begin_fmt = `<stream:stream from='%s' to='%s' version='%s' xml:lang='%s' id='%s' xmlns='%s' xmlns:stream='%s'>`
 
 const stream_end_fmt = `</stream:stream>`
