@@ -47,7 +47,7 @@ type XMPPStreamEnd struct {
 }
 
 type XMPPStreamFeatures struct {
-    XMLName        xml.Name            `xml:"features"`
+    XMLName        xml.Name            `xml:"http://etherx.jabber.org/streams features"`
     StartTLS       *XMPPStartTLS       `xml:",omitempty"`
     SASLMechanisms *XMPPSASLMechanisms `xml:",omitempty"`
     Bind           *XMPPBind           `xml:",omitempty"`
@@ -390,31 +390,31 @@ type XMPPClientPresence struct {
 type XMPPStreamError struct {
     XMLName xml.Name `xml:"stream:error"`
 
-    NotWellFormed              *XMPPStreamErrorNotWellFormed          `xml:",omitempty"`
-    InvalidNamespace           *XMPPStreamErrorInvalidNamespace       `xml:",omitempty"`
-    HostUnknown                *XMPPStreamErrorHostUnknown            `xml:",omitempty"`
-    BadFormat                  *XMPPStreamErrorBadFormat              `xml:",omitempty"`
-    BadNamespacePrefix         *XMPPStreamErrorBadNamespacePrefix     `xml:",omitempty"`
-    Conflict                   *XMPPStreamErrorConflict               `xml:",omitempty"`
-    ConnectionTimeout          *XMPPStreamErrorConnectionTimeout      `xml:",omitempty"`
-    HostGone                   *XMPPStreamErrorHostGone               `xml:",omitempty"`
-    ImproperAddressing         *XMPPStreamErrorImproperAddressing     `xml:",omitempty"`
-    InternalServerError        *XMPPStreamErrorInternalServerError    `xml:",omitempty"`
-    XMPPStreamErrorInvalidFrom *XMPPStreamErrorInvalidFrom            `xml:",omitempty"`
-    InvalidXML                 *XMPPStreamErrorInvalidXML             `xml:",omitempty"`
-    NotAuthorized              *XMPPStreamErrorNotAuthorized          `xml:",omitempty"`
-    PolicyViolation            *XMPPStreamErrorPolicyViolation        `xml:",omitempty"`
-    RemoteConnectionFailed     *XMPPStreamErrorRemoteConnectionFailed `xml:",omitempty"`
-    Reset                      *XMPPStreamErrorReset                  `xml:",omitempty"`
-    ResourceConstraint         *XMPPStreamErrorResourceConstraint     `xml:",omitempty"`
-    RestrictedXML              *XMPPStreamErrorRestrictedXML          `xml:",omitempty"`
-    SeeOtherHost               *XMPPStreamErrorSeeOtherHost           `xml:",omitempty"`
-    SystemShutdown             *XMPPStreamErrorSystemShutdown         `xml:",omitempty"`
-    UndefinedCondition         *XMPPStreamErrorUndefinedCondition     `xml:",omitempty"`
-    UnsupportedEncoding        *XMPPStreamErrorUnsupportedEncoding    `xml:",omitempty"`
-    UnsupportedFeature         *XMPPStreamErrorUnsupportedFeature     `xml:",omitempty"`
-    UnsupportedStanzaType      *XMPPStreamErrorUnsupportedStanzaType  `xml:",omitempty"`
-    UnsupportedVersion         *XMPPStreamErrorUnsupportedVersion     `xml:",omitempty"`
+    NotWellFormed          *XMPPStreamErrorNotWellFormed          `xml:",omitempty"`
+    InvalidNamespace       *XMPPStreamErrorInvalidNamespace       `xml:",omitempty"`
+    HostUnknown            *XMPPStreamErrorHostUnknown            `xml:",omitempty"`
+    BadFormat              *XMPPStreamErrorBadFormat              `xml:",omitempty"`
+    BadNamespacePrefix     *XMPPStreamErrorBadNamespacePrefix     `xml:",omitempty"`
+    Conflict               *XMPPStreamErrorConflict               `xml:",omitempty"`
+    ConnectionTimeout      *XMPPStreamErrorConnectionTimeout      `xml:",omitempty"`
+    HostGone               *XMPPStreamErrorHostGone               `xml:",omitempty"`
+    ImproperAddressing     *XMPPStreamErrorImproperAddressing     `xml:",omitempty"`
+    InternalServerError    *XMPPStreamErrorInternalServerError    `xml:",omitempty"`
+    InvalidFrom            *XMPPStreamErrorInvalidFrom            `xml:",omitempty"`
+    InvalidXML             *XMPPStreamErrorInvalidXML             `xml:",omitempty"`
+    NotAuthorized          *XMPPStreamErrorNotAuthorized          `xml:",omitempty"`
+    PolicyViolation        *XMPPStreamErrorPolicyViolation        `xml:",omitempty"`
+    RemoteConnectionFailed *XMPPStreamErrorRemoteConnectionFailed `xml:",omitempty"`
+    Reset                  *XMPPStreamErrorReset                  `xml:",omitempty"`
+    ResourceConstraint     *XMPPStreamErrorResourceConstraint     `xml:",omitempty"`
+    RestrictedXML          *XMPPStreamErrorRestrictedXML          `xml:",omitempty"`
+    SeeOtherHost           *XMPPStreamErrorSeeOtherHost           `xml:",omitempty"`
+    SystemShutdown         *XMPPStreamErrorSystemShutdown         `xml:",omitempty"`
+    UndefinedCondition     *XMPPStreamErrorUndefinedCondition     `xml:",omitempty"`
+    UnsupportedEncoding    *XMPPStreamErrorUnsupportedEncoding    `xml:",omitempty"`
+    UnsupportedFeature     *XMPPStreamErrorUnsupportedFeature     `xml:",omitempty"`
+    UnsupportedStanzaType  *XMPPStreamErrorUnsupportedStanzaType  `xml:",omitempty"`
+    UnsupportedVersion     *XMPPStreamErrorUnsupportedVersion     `xml:",omitempty"`
 
     // RFC6120 Section 4.9.4
     //
@@ -422,7 +422,7 @@ type XMPPStreamError struct {
     // by including a properly namespaced child in the error element. The application-specific
     // element SHOULD supplement or further qualify a defined element. Thus, the <error/>
     // element will contain two or three child elements.
-    ApplicationSpecificConditions string `xml:",innerxml,omitempty"`
+    ApplicationSpecificConditions string `xml:",omitempty"`
 }
 
 type XMPPStreamErrorDescriptiveText struct {
@@ -997,11 +997,15 @@ type XMPPCustom struct {
 
 const stream_response_begin_fmt = `<stream:stream from='%s' to='%s' version='%s' xml:lang='%s' id='%s' xmlns='%s' xmlns:stream='%s'>`
 
-const stream_end_fmt = `</stream:stream>`
-
-func make_stream_begin(s *XMPPStream) string {
+func GenXMPPStreamHeader(s *XMPPStream) string {
     return fmt.Sprintf(stream_response_begin_fmt,
-        s.From, s.To, s.Version,
-        s.XmlLang, s.Id, XMLNS_JABBER_CLIENT,
+        s.From,
+        s.To,
+        s.Version,
+        s.XmlLang,
+        s.Id,
+        XMLNS_JABBER_CLIENT,
         XMLNS_STREAM)
 }
+
+const stream_end_fmt = `</stream:stream>`

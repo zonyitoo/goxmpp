@@ -6,23 +6,33 @@ import (
     "regexp"
 )
 
-var validJid *regexp.Regexp = regexp.MustCompile(`^(\w+)@(\w+\.\w+)/?(\w+)?$`)
+var validJid *regexp.Regexp = regexp.MustCompile(`^(\w+)@(\w+\.\w+)+/?(\w+)?$`)
 
-type XMPPJID struct {
-    Local    string
-    Domain   string
+type BareJID struct {
+    Local  string
+    Domain string
+}
+
+type JID struct {
+    BareJID
     Resource string
 }
 
-func NewXMPPJID(local, domain, resource string) *XMPPJID {
-    return &XMPPJID{
-        Local:    local,
-        Domain:   domain,
+func ValidateJID(jidstr string) bool {
+    return validJid.MatchString(jidstr)
+}
+
+func NewJID(local, domain, resource string) *JID {
+    return &JID{
+        BareJID: BareJID{
+            Local:  local,
+            Domain: domain,
+        },
         Resource: resource,
     }
 }
 
-func NewXMPPJIDFromString(jid string) (*XMPPJID, error) {
+func NewJIDFromString(jid string) (*JID, error) {
     if !validJid.MatchString(jid) {
         return nil, errors.New("Malformed JID")
     }
@@ -38,13 +48,17 @@ func NewXMPPJIDFromString(jid string) (*XMPPJID, error) {
     if len(substrs) == 4 {
         resource = substrs[3]
     }
-    return NewXMPPJID(local, domain, resource), nil
+    return NewJID(local, domain, resource), nil
 }
 
-func (jid *XMPPJID) String() string {
+func (jid *JID) String() string {
     if jid.Resource != "" {
         return fmt.Sprintf("%s@%s/%s", jid.Local, jid.Domain, jid.Resource)
     } else {
         return fmt.Sprintf("%s@%s", jid.Local, jid.Domain)
     }
+}
+
+func (barejid *BareJID) String() string {
+    return fmt.Sprintf("%s@%s", barejid.Local, barejid.Domain)
 }

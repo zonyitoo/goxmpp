@@ -1,117 +1,51 @@
 package xmpp
 
 import (
-    "encoding/xml"
+    // "encoding/xml"
     "log"
     "net"
 )
 
-type ConnectionHandler func(*Connection) bool
-type ProcessingHandler func(*Connection, interface{}) bool
-
 type Server struct {
-    listener    net.Listener
-    connHandler ConnectionHandler
-    procHandler ProcessingHandler
+    clients         map[BareJID][]*Stream
+    listener        net.Listener
+    config          *ServerConfig
+    unbindedClients []*Stream
 }
 
-type Connection struct {
-    server  *Server
-    conn    net.Conn
-    decoder *Decoder
-    wchan   chan []byte
-}
-
-func NewServer(addr string, connHandler ConnectionHandler, procHandler ProcessingHandler) *Server {
-    l, err := net.Listen("tcp", addr)
+func NewServer(conf *ServerConfig) *Server {
+    listener, err := net.Listen("tcp", conf.listenAddr)
     if err != nil {
-        log.Panic(err)
+        panic(err)
     }
-
-    if procHandler == nil {
-        log.Panic("ProcessingHandler cannot be nil")
+    server := &Server{
+        clients:  make(map[BareJID][]*Stream),
+        listener: listener,
+        config:   conf,
     }
-    return &Server{
-        listener:    l,
-        connHandler: connHandler,
-        procHandler: procHandler,
-    }
+    return server
 }
 
-func (s *Server) Run() error {
+func (s *Server) doAccept() {
     for {
         conn, err := s.listener.Accept()
         if err != nil {
-            return nil
+            log.Println(err)
+            break
         }
 
-        log.Printf("%s connected", conn.RemoteAddr().String())
-        c := NewConnection(s, conn)
+        log.Printf("Client %s connected", conn.RemoteAddr().String())
 
-        if s.connHandler != nil && !s.connHandler(c) {
-            conn.Close()
-            continue
-        }
-
-        go c.process()
-        go c.write()
+        trans := NewTCPTransport(conn)
+        trans.SetReadTimeout()
+        NewStream(trans)
+        // s.unbindedClients = append(s.unbindedClients, stream)
     }
+
+    log.Println("Server exited")
 }
 
-func NewConnection(s *Server, conn net.Conn) *Connection {
-    return &Connection{
-        server:  s,
-        conn:    conn,
-        decoder: NewDecoder(conn),
-        wchan:   make(chan []byte),
-    }
-}
-
-func (c *Connection) process() {
-    for {
-        elem, err := c.decoder.GetNextElement()
-        if err != nil {
-            log.Printf("%s Err: %s", c.conn.RemoteAddr().String(), err)
-            c.EndStream()
-            return
-        }
-
-        switch t := elem.(type) {
-        case *XMPPStreamEnd:
-            c.EndStream()
-            return
-        case xml.ProcInst:
-            c.Write([]byte(xml.Header))
-        default:
-            if !c.server.procHandler(c, t) {
-                c.EndStream()
-                return
-            }
-        }
-    }
-}
-
-func (c *Connection) write() {
-    for b := range c.wchan {
-        c.conn.Write(b)
-    }
-    log.Printf("%s closed", c.conn.RemoteAddr().String())
-}
-
-func (c *Connection) Close() {
-    close(c.wchan)
-    c.conn.Close()
-}
-
-func (c *Connection) Write(b []byte) {
-    c.wchan <- b
-}
-
-func (c *Connection) EndStream() {
-    c.Write([]byte("</stream:stream>"))
-    c.Close()
-}
-
-func (c *Connection) RemoteAddr() net.Addr {
-    return c.conn.RemoteAddr()
+func (s *Server) Run() {
+    log.Printf("Server listening %s", s.config.listenAddr)
+    s.doAccept()
 }

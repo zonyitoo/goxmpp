@@ -5,7 +5,11 @@ import (
     "errors"
     "io"
     // "log"
+    "bytes"
 )
+
+var DecoderBadFormat = errors.New("Bad format")
+var DecoderUnexpectedEndOfElement = errors.New("Unexpected end of element")
 
 type Decoder struct {
     xmlDecoder *xml.Decoder
@@ -97,7 +101,11 @@ func (d *Decoder) GetNextElement() (interface{}, error) {
                     XMLName: t.Name,
                 }, nil
             } else {
-                return nil, errors.New("Unexpected end of element")
+                return nil, DecoderUnexpectedEndOfElement
+            }
+        case xml.CharData:
+            if len(bytes.TrimSpace(t)) != 0 {
+                return nil, DecoderBadFormat
             }
         }
     }
