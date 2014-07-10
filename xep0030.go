@@ -9,6 +9,9 @@ type XMPPStanzaIQDiscoInfo struct {
     Identitiy []*XMPPStanzaIQDiscoInfoIdentity `xml:",omitempty"`
     Features  []*XMPPStanzaIQDiscoInfoFeature  `xml:",omitempty"`
     Node      string                           `xml:"node,attr,omitempty"`
+
+    // XEP-0128
+    XData *XMPPXData `xml:",omitempty"`
 }
 
 type XMPPStanzaIQDiscoInfoIdentity struct {

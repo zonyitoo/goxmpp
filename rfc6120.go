@@ -395,6 +395,9 @@ type XMPPStanzaPresence struct {
     Status  string   `xml:"status",omitempty`
 
     Error *XMPPStanzaError `xml:",omitempty"`
+
+    // XEP-0115
+    Caps *XMPPStanzaPresenceCaps `xml:",omitempty"`
 }
 
 // RFC6120 Section 4.9
