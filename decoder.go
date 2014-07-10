@@ -38,6 +38,8 @@ func (d *Decoder) ParseElement(startToken xml.StartElement) (interface{}, error)
                 streamElem.Version = attr.Value
             case xml.Name{Space: "http://www.w3.org/XML/1998/namespace", Local: "lang"}:
                 streamElem.XmlLang = attr.Value
+            case xml.Name{Space: "", Local: "xmlns"}:
+                streamElem.Xmlns = attr.Value
             }
         }
         streamElem.XMLName = startToken.Name

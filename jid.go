@@ -6,7 +6,7 @@ import (
     "regexp"
 )
 
-var validJid *regexp.Regexp = regexp.MustCompile(`^(\w+)@(\w+\.\w+)+/?(\w+)?$`)
+var validJid *regexp.Regexp = regexp.MustCompile(`^(?:(\w+)@)?(\w+(?:\.\w+)+)(?:/(\w+))?$`)
 
 type BareJID struct {
     Local  string
@@ -38,24 +38,31 @@ func NewJIDFromString(jid string) (*JID, error) {
     }
 
     substrs := validJid.FindStringSubmatch(jid)
-    if len(substrs) < 3 {
+    if len(substrs) < 2 {
         return nil, errors.New("Malformed JID")
     }
 
-    local := substrs[1]
-    domain := substrs[2]
-    resource := ""
-    if len(substrs) == 4 {
-        resource = substrs[3]
+    if len(substrs) > 2 {
+        local := substrs[1]
+        domain := substrs[2]
+        resource := ""
+        if len(substrs) == 4 {
+            resource = substrs[3]
+        }
+        return NewJID(local, domain, resource), nil
+    } else {
+        domain := substrs[1]
+        return NewJID("", domain, ""), nil
     }
-    return NewJID(local, domain, resource), nil
 }
 
 func (jid *JID) String() string {
     if jid.Resource != "" {
         return fmt.Sprintf("%s@%s/%s", jid.Local, jid.Domain, jid.Resource)
-    } else {
+    } else if jid.Local != "" {
         return fmt.Sprintf("%s@%s", jid.Local, jid.Domain)
+    } else {
+        return jid.Domain
     }
 }
 

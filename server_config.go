@@ -3,13 +3,17 @@ package xmpp
 import ()
 
 type ServerConfig struct {
-    listenAddr string
-    serverName string
+    ListenAddr           string
+    ServerName           string
+    StreamHandlerFactory func() StreamHandler
+    StreamVersion        *StreamVersion
 }
 
 func NewDefaultServerConfig() *ServerConfig {
     return &ServerConfig{
-        listenAddr: ":5222",
-        serverName: "",
+        ListenAddr:           ":5222",
+        ServerName:           "",
+        StreamHandlerFactory: DefaultStreamHandlerFactory,
+        StreamVersion:        &StreamVersion{Major: 1, Minor: 0},
     }
 }

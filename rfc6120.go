@@ -40,6 +40,7 @@ type XMPPStream struct {
     Id      string   `xml:"id,attr,omitempty"`
     Version string   `xml:"version,attr"`
     XmlLang string   `xml:"xml:lang,attr"`
+    Xmlns   string   `xml:"xmlns,attr"`
 }
 
 type XMPPStreamEnd struct {
@@ -422,7 +423,7 @@ type XMPPStreamError struct {
     // by including a properly namespaced child in the error element. The application-specific
     // element SHOULD supplement or further qualify a defined element. Thus, the <error/>
     // element will contain two or three child elements.
-    ApplicationSpecificConditions string `xml:",omitempty"`
+    ApplicationSpecificConditions interface{} `xml:",omitempty"`
 }
 
 type XMPPStreamErrorDescriptiveText struct {
@@ -1004,7 +1005,7 @@ func GenXMPPStreamHeader(s *XMPPStream) string {
         s.Version,
         s.XmlLang,
         s.Id,
-        XMLNS_JABBER_CLIENT,
+        s.Xmlns,
         XMLNS_STREAM)
 }
 

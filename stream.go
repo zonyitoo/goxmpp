@@ -1,194 +1,83 @@
 package xmpp
 
 import (
-    "encoding/xml"
-    "log"
-    "net"
+    "errors"
+    "fmt"
+    "strconv"
+    "strings"
 )
 
 const (
-    STREAM_STAT_INIT    = 0
-    STREAM_STAT_STARTED = 1 << iota
+    STREAM_TYPE_CLIENT = iota
+    STREAM_TYPE_SERVER
+)
+
+const (
+    STREAM_STAT_INIT = iota
+    STREAM_STAT_STARTED
+    STREAM_STAT_TLS_NEGOCIATION
+    STREAM_STAT_TLS_FAILURE
+    STREAM_STAT_SASL_NEGOCIATION
+    STREAM_STAT_SASL_FAILURE
+    STREAM_STAT_SASL_SUCCEED
     STREAM_STAT_CLOSED
 )
 
-type Stream struct {
-    transport Transport
-    decoder   *Decoder
-    wchan     chan []byte
-    isClosed  bool
-    state     int
-    jid       *JID
+type Stream interface {
+    ServerConfig() *ServerConfig
+    JID() *JID
+    SetJID(*JID)
+    SendBytes([]byte)
+    StartStream(stype int, from, to, version, lang string)
+    SendElement(interface{}) error
+    Close()
+    EndStream()
+    Dispatch(interface{})
+    State() int
+    SetState(int)
 }
 
-func NewStream(trans Transport) *Stream {
-    stream := &Stream{
-        transport: trans,
-        decoder:   NewDecoder(trans),
-        wchan:     make(chan []byte),
-        isClosed:  false,
-        state:     STREAM_STAT_INIT,
+type StreamVersion struct {
+    Major int
+    Minor int
+}
+
+func (sv *StreamVersion) FromString(vstr string) error {
+    sp := strings.Split(vstr, ".")
+    if len(sp) != 2 {
+        return errors.New("Malformed version string")
     }
-    go stream.asyncWrite()
-    go stream.asyncProcess()
-    return stream
-}
-
-func (s *Stream) ResetTransport(trans Transport) {
-    if trans == nil {
-        panic("Transport should not be nil")
-    }
-
-    s.transport = trans
-    if !s.isClosed {
-        close(s.wchan)
-    }
-    s.decoder = NewDecoder(s.transport)
-    s.wchan = make(chan []byte)
-    s.isClosed = false
-    go s.asyncWrite()
-    go s.asyncProcess()
-}
-
-func (s *Stream) asyncWrite() {
-    for data := range s.wchan {
-        _, err := s.transport.Write(data)
-
-        if err != nil {
-            log.Printf("%s %s\n", s.transport.RemoteAddr().String(), err)
-            break
-        }
-    }
-
-    if err := s.transport.Close(); err != nil {
-        log.Println(err)
-    }
-
-    s.isClosed = true
-    log.Printf("Client %s closed", s.transport.RemoteAddr().String())
-}
-
-func (s *Stream) asyncProcess() {
-    for {
-        elem, err := s.decoder.GetNextElement()
-        if err != nil {
-            switch err.(type) {
-            case net.Error:
-                s.Close()
-            default:
-                resp := &XMPPStreamError{}
-                if err == DecoderBadFormat {
-                    resp.BadFormat = &XMPPStreamErrorBadFormat{}
-                } else {
-                    resp.NotWellFormed = &XMPPStreamErrorNotWellFormed{}
-                }
-                s.SendErrorAndEnd(resp)
-            }
-            return
-        }
-
-        switch t := elem.(type) {
-        case xml.ProcInst:
-            if s.state != STREAM_STAT_INIT {
-                resp := &XMPPStreamError{
-                    BadFormat: &XMPPStreamErrorBadFormat{},
-                }
-                s.SendErrorAndEnd(resp)
-                return
-            } else {
-                s.SendBytes([]byte(xml.Header))
-            }
-        case *XMPPStream:
-            if s.state == STREAM_STAT_INIT {
-                jid, err := NewJIDFromString(t.From)
-                if err != nil {
-                    resp := &XMPPStreamError{
-                        InvalidFrom: &XMPPStreamErrorInvalidFrom{},
-                    }
-                    s.SendErrorAndEnd(resp)
-                    return
-                }
-                s.jid = jid
-                s.SendStreamHeader("", t.From, t.Version, t.XmlLang)
-                s.state |= STREAM_STAT_STARTED
-            } else {
-                resp := &XMPPStreamError{
-                    BadFormat: &XMPPStreamErrorBadFormat{},
-                }
-                s.SendErrorAndEnd(resp)
-                return
-            }
-        case *XMPPStreamEnd:
-            s.End()
-            return
-        default:
-            if s.state&STREAM_STAT_STARTED == 0 {
-                resp := &XMPPStreamError{
-                    BadFormat: &XMPPStreamErrorBadFormat{},
-                }
-                s.SendErrorAndEnd(resp)
-                return
-            }
-            s.SendElement(t)
-        }
-    }
-}
-
-func (s *Stream) SendBytes(data []byte) {
-    s.wchan <- data
-}
-
-func (s *Stream) SendErrorAndEnd(e interface{}) {
-    if s.state&STREAM_STAT_STARTED == 0 {
-        s.SendStreamHeader("", "", "1.0", "en")
-    }
-    s.SendElement(e)
-    s.End()
-}
-
-func (s *Stream) SendStreamHeader(from, to, version, lang string) {
-    header := &XMPPStream{
-        From:    from,
-        To:      to,
-        Id:      s.transport.Id(),
-        Version: version,
-        XmlLang: lang,
-    }
-
-    s.SendBytes([]byte(GenXMPPStreamHeader(header)))
-}
-
-func (s *Stream) SendStreamEnd() {
-    s.SendBytes([]byte(stream_end_fmt))
-}
-
-func (s *Stream) SendElement(elem interface{}) error {
-    b, err := xml.Marshal(elem)
-    if err != nil {
+    if major, err := strconv.Atoi(sp[0]); err != nil {
         return err
+    } else {
+        sv.Major = major
     }
-    s.SendBytes(b)
+
+    if sv.Major < 0 {
+        return errors.New("Invalid major version")
+    }
+
+    if minor, err := strconv.Atoi(sp[1]); err != nil {
+        return err
+    } else {
+        sv.Minor = minor
+    }
+
+    if sv.Minor < 0 {
+        return errors.New("Invalid minor version")
+    }
+
     return nil
 }
 
-func (s *Stream) Close() {
-    if !s.isClosed {
-        close(s.wchan)
+func (sv *StreamVersion) String() string {
+    return fmt.Sprintf("%d.%d", sv.Major, sv.Minor)
+}
+
+func (sv *StreamVersion) GreaterOrEqualTo(rhs *StreamVersion) bool {
+    if sv.Major == rhs.Major {
+        return sv.Minor >= rhs.Minor
+    } else {
+        return sv.Major >= rhs.Major
     }
-    s.isClosed = true
-    s.state = STREAM_STAT_CLOSED
-}
-
-func (s *Stream) End() {
-    s.SendStreamEnd()
-
-    s.Close()
-}
-
-func (s *Stream) EnableReadTimeout() error {
-    return s.transport.SetReadTimeout()
-}
-
-func (s *Stream) DisableReadTimeout() error {
-    return s.transport.UnsetReadTimeout()
 }

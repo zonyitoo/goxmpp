@@ -5,14 +5,16 @@ import (
 )
 
 const (
-    BARE_JID_STR = "zonyitoo@gmail.com"
-    FULL_JID_STR = "zonyitoo@gmail.com/resourcepath"
+    BARE_JID_STR   = "zonyitoo@gmail.com"
+    FULL_JID_STR   = "zonyitoo@gmail.com/resourcepath"
+    DOMAIN_JID_STR = "gmail.com"
 )
 
 func Test_NewJIDFromString(t *testing.T) {
     bare_jid, err := NewJIDFromString(BARE_JID_STR)
     if err != nil {
         t.Error(err)
+        t.Fail()
     }
 
     bare_jid_valid := &JID{
@@ -30,6 +32,7 @@ func Test_NewJIDFromString(t *testing.T) {
     full_jid, err := NewJIDFromString(FULL_JID_STR)
     if err != nil {
         t.Error(err)
+        t.Fail()
     }
 
     full_jid_valid := &JID{
@@ -42,6 +45,30 @@ func Test_NewJIDFromString(t *testing.T) {
 
     if *full_jid != *full_jid_valid || full_jid.String() != FULL_JID_STR {
         t.Errorf("Error occurs while parsing %s", FULL_JID_STR)
+    }
+
+    domain_jid, err := NewJIDFromString(DOMAIN_JID_STR)
+    if err != nil {
+        t.Error(err)
+        t.Fail()
+    }
+
+    domain_jid_valid := &JID{
+        BareJID: BareJID{
+            Local:  "",
+            Domain: "gmail.com",
+        },
+        Resource: "",
+    }
+
+    if *domain_jid != *domain_jid_valid || domain_jid.String() != DOMAIN_JID_STR {
+        t.Errorf("Error occurs while parsing %s", DOMAIN_JID_STR)
+    }
+
+    _, err = NewJIDFromString("")
+    if err == nil {
+        t.Error("Empty should failed")
+        t.Fail()
     }
 }
 

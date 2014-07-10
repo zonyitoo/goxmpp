@@ -7,21 +7,20 @@ import (
 )
 
 type Server struct {
-    clients         map[BareJID][]*Stream
-    listener        net.Listener
-    config          *ServerConfig
-    unbindedClients []*Stream
+    dispatcher *ServerDispatcher
+    listener   net.Listener
+    config     *ServerConfig
 }
 
 func NewServer(conf *ServerConfig) *Server {
-    listener, err := net.Listen("tcp", conf.listenAddr)
+    listener, err := net.Listen("tcp", conf.ListenAddr)
     if err != nil {
         panic(err)
     }
     server := &Server{
-        clients:  make(map[BareJID][]*Stream),
-        listener: listener,
-        config:   conf,
+        dispatcher: &ServerDispatcher{},
+        listener:   listener,
+        config:     conf,
     }
     return server
 }
@@ -38,14 +37,13 @@ func (s *Server) doAccept() {
 
         trans := NewTCPTransport(conn)
         trans.SetReadTimeout()
-        NewStream(trans)
-        // s.unbindedClients = append(s.unbindedClients, stream)
+        NewC2SStream(trans, s)
     }
 
     log.Println("Server exited")
 }
 
 func (s *Server) Run() {
-    log.Printf("Server listening %s", s.config.listenAddr)
+    log.Printf("Server listening %s", s.config.ListenAddr)
     s.doAccept()
 }
