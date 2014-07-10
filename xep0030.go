@@ -4,34 +4,34 @@ import (
     "encoding/xml"
 )
 
-type XMPPStanzaIQDiscoInfo struct {
+type XMPPProtocolDiscoInfo struct {
     XMLName   xml.Name                         `xml:"http://jabber.org/protocol/disco#info query"`
-    Identitiy []*XMPPStanzaIQDiscoInfoIdentity `xml:",omitempty"`
-    Features  []*XMPPStanzaIQDiscoInfoFeature  `xml:",omitempty"`
+    Identitiy []*XMPPProtocolDiscoInfoIdentity `xml:",omitempty"`
+    Features  []*XMPPProtocolDiscoInfoFeature  `xml:",omitempty"`
     Node      string                           `xml:"node,attr,omitempty"`
 
     // XEP-0128
     XData *XMPPXData `xml:",omitempty"`
 }
 
-type XMPPStanzaIQDiscoInfoIdentity struct {
+type XMPPProtocolDiscoInfoIdentity struct {
     XMLName  xml.Name `xml:"identity"`
     Category string   `xml:"category,attr"`
     Type     string   `xml:"type,attr"`
     Name     string   `xml:"type,attr"`
 }
 
-type XMPPStanzaIQDiscoInfoFeature struct {
+type XMPPProtocolDiscoInfoFeature struct {
     XMLName xml.Name `xml:"feature"`
     Var     string   `xml:"var,attr"`
 }
 
-type XMPPStanzaIQDiscoItems struct {
+type XMPPProtocolDiscoItems struct {
     XMLName xml.Name                      `xml:"http://jabber.org/protocol/disco#item query"`
-    Items   []*XMPPStanzaIQDiscoItemsItem `xml:",omitempty"`
+    Items   []*XMPPProtocolDiscoItemsItem `xml:",omitempty"`
 }
 
-type XMPPStanzaIQDiscoItemsItem struct {
+type XMPPProtocolDiscoItemsItem struct {
     XMLName xml.Name `xml:"item"`
     JID     string   `xml:"jid,attr"`
     Name    string   `xml:"name,attr,omitempty"`

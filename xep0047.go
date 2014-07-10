@@ -4,7 +4,7 @@ import (
     "encoding/xml"
 )
 
-const XMLNS_JABBER_PROTOCOL_INBAND_TYPESTREAM = "http://jabber.org/protocol/ibb"
+const XMLNS_JABBER_PROTOCOL_INBAND_BYTESTREAM = "http://jabber.org/protocol/ibb"
 
 type XMPPProtocolInBandByteStreamOpen struct {
     XMLName   xml.Name `xml:"http://jabber.org/protocol/ibb open"`

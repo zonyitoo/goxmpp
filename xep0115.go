@@ -4,7 +4,7 @@ import (
     "encoding/xml"
 )
 
-type XMPPStanzaPresenceCaps struct {
+type XMPPStanzaPresenceCAP struct {
     XMLName xml.Name `xml:"http://jabber.org/protocol/caps c"`
     Hash    string   `xml:"hash,attr"`
     Node    string   `xml:"node,attr"`
