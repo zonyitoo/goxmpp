@@ -6,9 +6,8 @@ import (
 )
 
 const (
-    XMLNS_JABBER_CLIENT    = "jabber:client"
-    XMLNS_JABBER_IQ_ROSTER = "jabber:iq:roster"
-    XMLNS_JABBER_SERVER    = "jabber:server"
+    XMLNS_JABBER_CLIENT = "jabber:client"
+    XMLNS_JABBER_SERVER = "jabber:server"
 
     XMLNS_STREAM       = "http://etherx.jabber.org/streams"
     XMLNS_XMPP_TLS     = "urn:ietf:params:xml:ns:xmpp-tls"
@@ -28,9 +27,9 @@ var TAG_SASL_CHALLENGE xml.Name = xml.Name{Space: XMLNS_XMPP_SASL, Local: "chall
 var TAG_SASL_RESPONSE xml.Name = xml.Name{Space: XMLNS_XMPP_SASL, Local: "response"}
 var TAG_SASL_SUCCESS xml.Name = xml.Name{Space: XMLNS_XMPP_SASL, Local: "success"}
 var TAG_SASL_FAILURE xml.Name = xml.Name{Space: XMLNS_XMPP_SASL, Local: "failure"}
-var TAG_CLIENT_IQ xml.Name = xml.Name{Space: XMLNS_JABBER_CLIENT, Local: "iq"}
-var TAG_CLIENT_PRESENCE xml.Name = xml.Name{Space: XMLNS_JABBER_CLIENT, Local: "presence"}
-var TAG_CLIENT_MESSAGE xml.Name = xml.Name{Space: XMLNS_JABBER_CLIENT, Local: "message"}
+var TAG_STANZA_IQ xml.Name = xml.Name{Space: "", Local: "iq"}
+var TAG_STANZA_PRESENCE xml.Name = xml.Name{Space: "", Local: "presence"}
+var TAG_STANZA_MESSAGE xml.Name = xml.Name{Space: "", Local: "message"}
 
 // RFC6120 Section 4
 type XMPPStream struct {
@@ -52,6 +51,9 @@ type XMPPStreamFeatures struct {
     StartTLS       *XMPPStartTLS       `xml:",omitempty"`
     SASLMechanisms *XMPPSASLMechanisms `xml:",omitempty"`
     Bind           *XMPPBind           `xml:",omitempty"`
+
+    // XEP-0077
+    Register *XMPPStreamFeatureRegister `xml:",omitempty"`
 }
 
 type XMPPRequired struct {
@@ -330,21 +332,29 @@ type XMPPBind struct {
 // use of the 'id' attribute. Thus, IQ interactions follow a common pattern of structured
 // data exchange such as get/result or set/result (although an error can be returned in
 // reply to a request if appropriate)
-type XMPPClientIQ struct {
-    XMLName xml.Name `xml:"jabber:client iq"`
+type XMPPStanzaIQ struct {
+    XMLName xml.Name `xml:"iq"`
     From    string   `xml:"from,attr,omitempty"`
     To      string   `xml:"to,attr,omitempty"`
     Id      string   `xml:"id,attr"`
     Type    string   `xml:"type,attr"`
 
-    Error  *XMPPStanzaError    `xml:",omitempty"`
-    Bind   *XMPPBind           `xml:",omitempty"`
-    Roster *XMPPClientIQRoster `xml:",omitempty"`
+    Error *XMPPStanzaError `xml:",omitempty"`
+    Bind  *XMPPBind        `xml:",omitempty"`
+
+    // RFC6121
+    Roster *XMPPStanzaIQRoster `xml:",omitempty"`
+
+    // XEP-0054
+    VCard *XMPPStanzaIQVCard `xml:",omitempty"`
 }
 
-type XMPPClientIQRoster struct {
-    XMLName xml.Name `xml:"jabber:iq:roster query"`
-}
+const (
+    XMPP_STANZA_IQ_TYPE_GET    = "get"
+    XMPP_STANZA_IQ_TYPE_SET    = "set"
+    XMPP_STANZA_IQ_TYPE_RESULT = "result"
+    XMPP_STANZA_IQ_TYPE_ERROR  = "error"
+)
 
 // RFC6120 Section 8.2.1
 //
@@ -355,8 +365,8 @@ type XMPPClientIQRoster struct {
 // to the bare JID of a connected client's account. Upon receiving a message stanza with a
 // 'to' address, a server SHOULD attempt to route or deliver it to the intended recipient
 // (see Section 10 for general routing and delivery rules related to XML stanzas).
-type XMPPClientMessage struct {
-    XMLName xml.Name `xml:"jabber:client message"`
+type XMPPStanzaMessage struct {
+    XMLName xml.Name `xml:"message"`
     From    string   `xml:"from,attr"`
     To      string   `xml:"to,attr"`
     Type    string   `xml:"type,attr"`
@@ -378,8 +388,8 @@ type XMPPClientMessage struct {
 // used by XMPP clients, it can also be used by servers, add-on services, and any other kind of
 // XMPP entity. See Section 10 for general routing and delivery rules related to XML stanzas,
 // and [XMPP‑IM] for rules specific to presence applications.
-type XMPPClientPresence struct {
-    XMLName xml.Name `xml:"jabber:client presence"`
+type XMPPStanzaPresence struct {
+    XMLName xml.Name `xml:"presence"`
     XmlLang string   `xml:"xml:lang,attr"`
     Show    string   `xml:"show",omitempty`
     Status  string   `xml:"status",omitempty`
@@ -718,8 +728,10 @@ type XMPPStanzaErrorDescriptiveText struct {
 //   a hint regarding actions that the sender might be able to take in an effort to remedy the
 //   error (however, it is not always possible to remedy the error)
 type XMPPStanzaError struct {
-    XMLName xml.Name `xml:"error"`
-    Type    string   `xml:"type,attr"`
+    XMLName xml.Name                        `xml:"error"`
+    Type    string                          `xml:"type,attr"`
+    Code    int                             `xml:"code,attr"` // Defined in XEP-0086, which is already deprecated!
+    Text    *XMPPStanzaErrorDescriptiveText `xml:"omitempty"`
 
     BadRequest            *XMPPStanzaErrorBadRequest            `xml:",omitempty"`
     Conflict              *XMPPStanzaErrorConflict              `xml:",omitempty"`
@@ -746,6 +758,14 @@ type XMPPStanzaError struct {
 
     ApplicationSpecificConditions string `xml:",any,innerxml,omitempty"`
 }
+
+const (
+    XMPP_STANZA_ERROR_TYPE_AUTH     = "auth"
+    XMPP_STANZA_ERROR_TYPE_MODIFY   = "modify"
+    XMPP_STANZA_ERROR_TYPE_CANCEL   = "cancel"
+    XMPP_STANZA_ERROR_TYPE_CONTINUE = "continue"
+    XMPP_STANZA_ERROR_TYPE_WAIT     = "wait"
+)
 
 // RFC6120 Section 8.3.3.1
 //

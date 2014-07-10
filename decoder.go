@@ -67,12 +67,12 @@ func (d *Decoder) ParseElement(startToken xml.StartElement) (interface{}, error)
     case TAG_SASL_AUTH:
         element = &XMPPSASLAuth{}
 
-    case TAG_CLIENT_IQ:
-        element = &XMPPClientIQ{}
-    case TAG_CLIENT_PRESENCE:
-        element = &XMPPClientPresence{}
-    case TAG_CLIENT_MESSAGE:
-        element = &XMPPClientMessage{}
+    case TAG_STANZA_IQ:
+        element = &XMPPStanzaIQ{}
+    case TAG_STANZA_PRESENCE:
+        element = &XMPPStanzaPresence{}
+    case TAG_STANZA_MESSAGE:
+        element = &XMPPStanzaMessage{}
 
     default:
         element = &XMPPCustom{}

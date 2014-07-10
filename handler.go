@@ -2,13 +2,13 @@ package xmpp
 
 import (
     "encoding/xml"
-    "log"
+    // "log"
 )
 
 type StanzaHandler interface {
-    Message(Stream, *XMPPClientMessage)
-    Present(Stream, *XMPPClientPresence)
-    IQ(Stream, *XMPPClientIQ)
+    Message(Stream, *XMPPStanzaMessage)
+    Present(Stream, *XMPPStanzaPresence)
+    IQ(Stream, *XMPPStanzaIQ)
     Error(Stream, *XMPPStanzaError)
 }
 
@@ -46,7 +46,7 @@ func (h *defaultStreamHandler) Header(s Stream, x *XMPPStream) {
         err := XMPPStreamError{
             InvalidNamespace: &XMPPStreamErrorInvalidNamespace{},
         }
-        s.StartStream(XMLNS_JABBER_CLIENT, x.To, x.From, s.ServerConfig().StreamVersion.String(), x.XmlLang)
+        s.StartStream(STREAM_TYPE_CLIENT, x.To, x.From, s.ServerConfig().StreamVersion.String(), x.XmlLang)
         s.SendElement(err)
         s.EndStream()
         return
@@ -98,7 +98,7 @@ NO_FROM_ERROR:
 
     if !s.ServerConfig().StreamVersion.GreaterOrEqualTo(version) {
         err := XMPPStreamError{
-            UnsupportedVersion: XMPPStreamErrorUnsupportedVersion{},
+            UnsupportedVersion: &XMPPStreamErrorUnsupportedVersion{},
         }
         s.StartStream(stype, x.To, x.From, s.ServerConfig().StreamVersion.String(), x.XmlLang)
         s.SendElement(err)

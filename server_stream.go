@@ -64,7 +64,8 @@ func (s *C2SStream) asyncProcess() {
                 } else {
                     resp.NotWellFormed = &XMPPStreamErrorNotWellFormed{}
                 }
-                s.SendErrorAndEnd(resp)
+                s.SendElement(resp)
+                s.EndStream()
             }
             return
         }
@@ -131,7 +132,7 @@ func (s *C2SStream) Dispatch(elem interface{}) {
         s.streamHandler.TLSNegociation(s, t)
     case *XMPPTLSFailure:
         s.streamHandler.TLSNegociation(s, t)
-    case *XMPPSASLAbort:
+    case *XMPPSASLAuth:
         s.state = STREAM_STAT_SASL_NEGOCIATION
         s.streamHandler.SASLNegociation(s, t)
     case *XMPPSASLAbort:
@@ -156,14 +157,6 @@ func (s *C2SStream) SendBytes(data []byte) {
         data = append(data, '\n')
     }
     s.wchan <- data
-}
-
-func (s *C2SStream) SendErrorAndEnd(e interface{}) {
-    if s.state&STREAM_STAT_STARTED == 0 {
-        s.StartStream(STREAM_TYPE_CLIENT, "", "", "1.0", "en")
-    }
-    s.SendElement(e)
-    s.EndStream()
 }
 
 func (s *C2SStream) StartStream(stype int, from, to, version, lang string) {
