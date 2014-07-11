@@ -9,6 +9,11 @@ type XMPPStreamFeatureCompression struct {
     Methods []string `xml:"method,omitempty"`
 }
 
+const (
+    XMPP_STREAM_FEATURE_COMPRESSION_METHOD_ZLIB = "zlib"
+    XMPP_STREAM_FEATURE_COMPRESSION_METHOD_LZW  = "lzw"
+)
+
 type XMPPStreamCreateCompress struct {
     XMLName xml.Name `xml:"http://jabber.org/features/compress ccompress"`
     Methods []string `xml:"method,omitempty"`

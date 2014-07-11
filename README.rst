@@ -12,6 +12,8 @@ Currently Working on
 
 * RFC6120 (Core)
 * RFC6121 (Roster & Subscribe)
+* XEP0004 (X-Data)
+* XEP0009 (RPC)
 * XEP0030 (Service Discovery)
 * XEP0047 (In-Band ByteStream)
 * XEP0054 (vCard)

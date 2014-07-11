@@ -59,7 +59,7 @@ func (s *C2SStream) asyncProcess() {
                 s.Close()
             default:
                 resp := &XMPPStreamError{}
-                if err == DecoderBadFormat {
+                if err == DecoderBadFormatError {
                     resp.BadFormat = &XMPPStreamErrorBadFormat{}
                 } else {
                     resp.NotWellFormed = &XMPPStreamErrorNotWellFormed{}

@@ -8,8 +8,8 @@ import (
     "bytes"
 )
 
-var DecoderBadFormat = errors.New("Bad format")
-var DecoderUnexpectedEndOfElement = errors.New("Unexpected end of element")
+var DecoderBadFormatError = errors.New("Bad format")
+var DecoderUnexpectedEndOfElementError = errors.New("Unexpected end of element")
 
 type Decoder struct {
     xmlDecoder *xml.Decoder
@@ -67,17 +67,11 @@ func (d *Decoder) ParseElement(startToken xml.StartElement) (interface{}, error)
     case TAG_SASL_AUTH:
         element = &XMPPSASLAuth{}
 
-    case TAG_STANZA_IQ_CLIENT:
-        fallthrough
-    case TAG_STANZA_IQ_SERVER:
+    case TAG_STANZA_IQ_CLIENT, TAG_STANZA_IQ_SERVER:
         element = &XMPPStanzaIQ{}
-    case TAG_STANZA_PRESENCE_SERVER:
-        fallthrough
-    case TAG_STANZA_PRESENCE_CLIENT:
+    case TAG_STANZA_PRESENCE_SERVER, TAG_STANZA_PRESENCE_CLIENT:
         element = &XMPPStanzaPresence{}
-    case TAG_STANZA_MESSAGE_SERVER:
-        fallthrough
-    case TAG_STANZA_MESSAGE_CLIENT:
+    case TAG_STANZA_MESSAGE_SERVER, TAG_STANZA_MESSAGE_CLIENT:
         element = &XMPPStanzaMessage{}
 
     default:
@@ -109,11 +103,11 @@ func (d *Decoder) GetNextElement() (interface{}, error) {
                     XMLName: t.Name,
                 }, nil
             } else {
-                return nil, DecoderUnexpectedEndOfElement
+                return nil, DecoderUnexpectedEndOfElementError
             }
         case xml.CharData:
             if len(bytes.TrimSpace(t)) != 0 {
-                return nil, DecoderBadFormat
+                return nil, DecoderBadFormatError
             }
         }
     }
