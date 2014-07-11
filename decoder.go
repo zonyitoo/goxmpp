@@ -37,7 +37,7 @@ func (d *Decoder) ParseElement(startToken xml.StartElement) (interface{}, error)
             case xml.Name{Space: "", Local: "version"}:
                 streamElem.Version = attr.Value
             case xml.Name{Space: "http://www.w3.org/XML/1998/namespace", Local: "lang"}:
-                streamElem.XmlLang = attr.Value
+                streamElem.XMLLang = attr.Value
             case xml.Name{Space: "", Local: "xmlns"}:
                 streamElem.Xmlns = attr.Value
             }
@@ -67,11 +67,17 @@ func (d *Decoder) ParseElement(startToken xml.StartElement) (interface{}, error)
     case TAG_SASL_AUTH:
         element = &XMPPSASLAuth{}
 
-    case TAG_STANZA_IQ:
+    case TAG_STANZA_IQ_CLIENT:
+        fallthrough
+    case TAG_STANZA_IQ_SERVER:
         element = &XMPPStanzaIQ{}
-    case TAG_STANZA_PRESENCE:
+    case TAG_STANZA_PRESENCE_SERVER:
+        fallthrough
+    case TAG_STANZA_PRESENCE_CLIENT:
         element = &XMPPStanzaPresence{}
-    case TAG_STANZA_MESSAGE:
+    case TAG_STANZA_MESSAGE_SERVER:
+        fallthrough
+    case TAG_STANZA_MESSAGE_CLIENT:
         element = &XMPPStanzaMessage{}
 
     default:

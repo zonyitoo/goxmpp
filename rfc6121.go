@@ -9,20 +9,20 @@ const (
 )
 
 // RFC6121
-type XMPPStanzaIQRoster struct {
-    XMLName  xml.Name                  `xml:"jabber:iq:roster query"`
-    Ver      string                    `xml:"ver,attr,omitempty"`
-    Approved bool                      `xml:"approved,omitempty"`
-    Item     []*XMPPStanzaIQRosterItem `xml:",omitempty"`
+type XMPPStanzaIQRosterQuery struct {
+    XMLName xml.Name                  `xml:"jabber:iq:roster query"`
+    Ver     string                    `xml:"ver,attr,omitempty"`
+    Item    []*XMPPStanzaIQRosterItem `xml:",omitempty"`
 }
 
 type XMPPStanzaIQRosterItem struct {
     XMLName      xml.Name `xml:"item"`
     JID          string   `xml:"jid,attr"`
-    Name         string   `xml:"name,attr"`
-    Subscription string   `xml:"subscription,attr"`
-    Ask          string   `xml:"ask,attr"`
-    Group        []string `xml:"group,omitempty"`
+    Name         string   `xml:"name,attr,omitempty"`
+    Subscription string   `xml:"subscription,attr,omitempty"`
+    Ask          string   `xml:"ask,attr,omitempty"`
+    Groups       []string `xml:"group,omitempty"`
+    Approved     bool     `xml:"approved,omitempty"`
 }
 
 const (
@@ -42,4 +42,8 @@ const (
     // presence (also called a "mutual subscription")
     XMPP_IQ_ROSTER_ITEM_SUBSCRIPTION_TYPE_BOTH   = "both"
     XMPP_IQ_ROSTER_ITEM_SUBSCRIPTION_TYPE_REMOVE = "remove"
+)
+
+const (
+    XMPP_IQ_ROSTER_ITEM_ASK_SUBSCRIBE = "subscribe"
 )

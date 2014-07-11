@@ -46,7 +46,7 @@ func (h *defaultStreamHandler) Header(s Stream, x *XMPPStream) {
         err := XMPPStreamError{
             InvalidNamespace: &XMPPStreamErrorInvalidNamespace{},
         }
-        s.StartStream(STREAM_TYPE_CLIENT, x.To, x.From, s.ServerConfig().StreamVersion.String(), x.XmlLang)
+        s.StartStream(STREAM_TYPE_CLIENT, x.To, x.From, s.ServerConfig().StreamVersion.String(), x.XMLLang)
         s.SendElement(err)
         s.EndStream()
         return
@@ -100,12 +100,12 @@ NO_FROM_ERROR:
         err := XMPPStreamError{
             UnsupportedVersion: &XMPPStreamErrorUnsupportedVersion{},
         }
-        s.StartStream(stype, x.To, x.From, s.ServerConfig().StreamVersion.String(), x.XmlLang)
+        s.StartStream(stype, x.To, x.From, s.ServerConfig().StreamVersion.String(), x.XMLLang)
         s.SendElement(err)
         s.EndStream()
     }
 
-    s.StartStream(stype, x.To, x.From, s.ServerConfig().StreamVersion.String(), x.XmlLang)
+    s.StartStream(stype, x.To, x.From, s.ServerConfig().StreamVersion.String(), x.XMLLang)
 }
 
 func (h *defaultStreamHandler) TLSNegociation(s Stream, x interface{}) {

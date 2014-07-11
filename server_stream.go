@@ -84,7 +84,7 @@ func (s *C2SStream) asyncProcess() {
         //             return
         //         }
         //         s.jid = jid
-        //         s.StartStream(STREAM_TYPE_CLIENT, "", t.From, t.Version, t.XmlLang)
+        //         s.StartStream(STREAM_TYPE_CLIENT, "", t.From, t.Version, t.XMLLang)
         //         s.state |= STREAM_STAT_STARTED
         //     } else {
         //         resp := &XMPPStreamError{
@@ -165,7 +165,7 @@ func (s *C2SStream) StartStream(stype int, from, to, version, lang string) {
         To:      to,
         Id:      s.transport.Id(),
         Version: version,
-        XmlLang: lang,
+        XMLLang: lang,
     }
     if stype == STREAM_TYPE_CLIENT {
         header.Xmlns = XMLNS_JABBER_CLIENT

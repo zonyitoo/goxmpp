@@ -27,9 +27,12 @@ var TAG_SASL_CHALLENGE xml.Name = xml.Name{Space: XMLNS_XMPP_SASL, Local: "chall
 var TAG_SASL_RESPONSE xml.Name = xml.Name{Space: XMLNS_XMPP_SASL, Local: "response"}
 var TAG_SASL_SUCCESS xml.Name = xml.Name{Space: XMLNS_XMPP_SASL, Local: "success"}
 var TAG_SASL_FAILURE xml.Name = xml.Name{Space: XMLNS_XMPP_SASL, Local: "failure"}
-var TAG_STANZA_IQ xml.Name = xml.Name{Space: "", Local: "iq"}
-var TAG_STANZA_PRESENCE xml.Name = xml.Name{Space: "", Local: "presence"}
-var TAG_STANZA_MESSAGE xml.Name = xml.Name{Space: "", Local: "message"}
+var TAG_STANZA_IQ_CLIENT xml.Name = xml.Name{Space: XMLNS_JABBER_CLIENT, Local: "iq"}
+var TAG_STANZA_IQ_SERVER xml.Name = xml.Name{Space: XMLNS_JABBER_SERVER, Local: "iq"}
+var TAG_STANZA_PRESENCE_CLIENT xml.Name = xml.Name{Space: XMLNS_JABBER_CLIENT, Local: "presence"}
+var TAG_STANZA_PRESENCE_SERVER xml.Name = xml.Name{Space: XMLNS_JABBER_SERVER, Local: "presence"}
+var TAG_STANZA_MESSAGE_CLIENT xml.Name = xml.Name{Space: XMLNS_JABBER_CLIENT, Local: "message"}
+var TAG_STANZA_MESSAGE_SERVER xml.Name = xml.Name{Space: XMLNS_JABBER_SERVER, Local: "message"}
 
 // RFC6120 Section 4
 type XMPPStream struct {
@@ -38,7 +41,7 @@ type XMPPStream struct {
     To      string   `xml:"to,attr"`
     Id      string   `xml:"id,attr,omitempty"`
     Version string   `xml:"version,attr"`
-    XmlLang string   `xml:"xml:lang,attr"`
+    XMLLang string   `xml:"http://www.w3.org/XML/1998/namespace lang,attr"`
     Xmlns   string   `xml:"xmlns,attr"`
 }
 
@@ -310,7 +313,7 @@ type XMPPSASLErrorTemporaryAuthFailure struct {
 
 type XMPPSASLErrorDescriptiveText struct {
     XMLName xml.Name `xml:"text"`
-    XmlLang string   `xml:"xml:lang,attr"`
+    XMLLang string   `xml:"http://www.w3.org/XML/1998/namespace lang,attr"`
     Text    string   `xml:",chardata"`
 }
 
@@ -318,7 +321,7 @@ type XMPPSASLErrorDescriptiveText struct {
 type XMPPBind struct {
     XMLName  xml.Name `xml:"urn:ietf:params:xml:ns:xmpp-bind bind"`
     Resource string   `xml:"resource,omitempty"`
-    Jid      string   `xml:"jid,omitempty"`
+    JID      string   `xml:"jid,omitempty"`
 }
 
 // RFC6120 Section 8.2.3
@@ -338,12 +341,13 @@ type XMPPStanzaIQ struct {
     To      string   `xml:"to,attr,omitempty"`
     Id      string   `xml:"id,attr"`
     Type    string   `xml:"type,attr"`
+    XMLLang string   `xml:"http://www.w3.org/XML/1998/namespace lang,attr,omitempty"`
 
     Error *XMPPStanzaError `xml:",omitempty"`
     Bind  *XMPPBind        `xml:",omitempty"`
 
     // RFC6121
-    Roster *XMPPStanzaIQRoster `xml:",omitempty"`
+    Roster *XMPPStanzaIQRosterQuery `xml:",omitempty"`
 
     // XEP-0054
     VCard *XMPPStanzaIQVCard `xml:",omitempty"`
@@ -366,14 +370,43 @@ const (
 // 'to' address, a server SHOULD attempt to route or deliver it to the intended recipient
 // (see Section 10 for general routing and delivery rules related to XML stanzas).
 type XMPPStanzaMessage struct {
-    XMLName xml.Name `xml:"message"`
-    From    string   `xml:"from,attr"`
-    To      string   `xml:"to,attr"`
-    Type    string   `xml:"type,attr"`
-    XmlLang string   `xml:"xml:lang,attr"`
-    Body    string   `xml:"body"`
+    XMLName xml.Name                  `xml:"message"`
+    XMLLang string                    `xml:"http://www.w3.org/XML/1998/namespace lang,attr,omitempty"`
+    From    string                    `xml:"from,attr,omitempty"`
+    To      string                    `xml:"to,attr,omitempty"`
+    Type    string                    `xml:"type,attr"`
+    Id      string                    `xml:"id,attr,omitempty"`
+    Body    *XMPPStanzaMessageBody    `xml:",omitempty"`
+    Subject *XMPPStanzaMessageSubject `xml:",omitempty"`
+    Thread  *XMPPStanzaMessageThread  `xml:",omitempty"`
+    Error   *XMPPStanzaError          `xml:",omitempty"`
+}
 
-    Error *XMPPStanzaError `xml:",omitempty"`
+const (
+    XMPP_STANZA_MESSAGE_TYPE_CHAT      = "chat"
+    XMPP_STANZA_MESSAGE_TYPE_ERROR     = "error"
+    XMPP_STANZA_MESSAGE_TYPE_GROUPCHAT = "groupchat"
+    XMPP_STANZA_MESSAGE_TYPE_HEADLINE  = "headline"
+    XMPP_STANZA_MESSAGE_TYPE_NORMAL    = "normal"
+)
+
+type XMPPStanzaMessageBody struct {
+    XMLName xml.Name `xml:"body"`
+    Data    string   `xml:",chardata"`
+    XMLLang string   `xml:"http://www.w3.org/XML/1998/namespace lang,attr,omitempty"`
+}
+
+type XMPPStanzaMessageSubject struct {
+    XMLName xml.Name `xml:"subject"`
+    Data    string   `xml:",chardata"`
+    XMLLang string   `xml:"xhttp://www.w3.org/XML/1998/namespace lang,attr,omitempty"`
+}
+
+type XMPPStanzaMessageThread struct {
+    XMLName xml.Name `xml:"thread"`
+    Data    string   `xml:",chardata"`
+    XMLLang string   `xml:"http://www.w3.org/XML/1998/namespace lang,attr,omitempty"`
+    Parent  string   `xml:"parent,attr,omitempty"`
 }
 
 // RFC6120 Section 8.2.2
@@ -389,15 +422,40 @@ type XMPPStanzaMessage struct {
 // XMPP entity. See Section 10 for general routing and delivery rules related to XML stanzas,
 // and [XMPP‑IM] for rules specific to presence applications.
 type XMPPStanzaPresence struct {
-    XMLName xml.Name `xml:"presence"`
-    XmlLang string   `xml:"xml:lang,attr"`
-    Show    string   `xml:"show",omitempty`
-    Status  string   `xml:"status",omitempty`
-
-    Error *XMPPStanzaError `xml:",omitempty"`
+    XMLName  xml.Name                  `xml:"presence"`
+    XMLLang  string                    `xml:"http://www.w3.org/XML/1998/namespace lang,attr,omitempty"`
+    From     string                    `xml:"from,attr,omitempty"`
+    Id       string                    `xml:"id,attr,omitempty"`
+    To       string                    `xml:"to,attr,omitempty"`
+    Type     string                    `xml:"type,attr,omitempty"`
+    Show     string                    `xml:"show",omitempty`
+    Status   *XMPPStanzaPresenceStatus `xml:",omitempty"`
+    Priority byte                      `xml:"priority,omitempty"`
+    Error    *XMPPStanzaError          `xml:",omitempty"`
 
     // XEP-0115
-    Caps *XMPPStanzaPresenceCaps `xml:",omitempty"`
+    Cap *XMPPStanzaPresenceCAP `xml:",omitempty"`
+}
+
+const (
+    XMPP_STANZA_PRESENCE_TYPE_ERROR        = "error"
+    XMPP_STANZA_PRESENCE_TYPE_PROBE        = "probe"
+    XMPP_STANZA_PRESENCE_TYPE_SUBSCRIBE    = "subscribe"
+    XMPP_STANZA_PRESENCE_TYPE_SUBSCRIBED   = "subscribed"
+    XMPP_STANZA_PRESENCE_TYPE_UNAVAILABLE  = "unavailable"
+    XMPP_STANZA_PRESENCE_TYPE_UNSUBSCRIBE  = "unsubscribe"
+    XMPP_STANZA_PRESENCE_TYPE_UNSUBSCRIBED = "unsubscribed"
+
+    XMPP_STANZA_PRESENCE_SHOW_AWAY = "away"
+    XMPP_STANZA_PRESENCE_SHOW_CHAT = "chat"
+    XMPP_STANZA_PRESENCE_SHOW_DND  = "dnd"
+    XMPP_STANZA_PRESENCE_SHOW_XA   = "xa"
+)
+
+type XMPPStanzaPresenceStatus struct {
+    XMLName xml.Name `xml:"status"`
+    Data    string   `xml:",chardata"`
+    XMLLang string   `xml:"http://www.w3.org/XML/1998/namespace lang,attr,omitempty"`
 }
 
 // RFC6120 Section 4.9
@@ -441,7 +499,7 @@ type XMPPStreamError struct {
 
 type XMPPStreamErrorDescriptiveText struct {
     XMLName xml.Name `xml:"urn:ietf:params:xml:ns:xmpp-streams text"`
-    XmlLang string   `xml:"xml:lang,attr"`
+    XMLLang string   `xml:"http://www.w3.org/XML/1998/namespace lang,attr"`
     Text    string   `xml:",chardata"`
 }
 
@@ -713,7 +771,7 @@ type XMPPStreamErrorUnsupportedVersion struct {
 
 type XMPPStanzaErrorDescriptiveText struct {
     XMLName xml.Name `xml:"urn:ietf:params:xml:ns:xmpp-stanzas text"`
-    XmlLang string   `xml:"xml:lang,attr"`
+    XMLLang string   `xml:"http://www.w3.org/XML/1998/namespace lang,attr"`
 }
 
 // RFC6120 Section 8.3
@@ -735,6 +793,7 @@ type XMPPStanzaError struct {
     Type    string                          `xml:"type,attr"`
     Code    int                             `xml:"code,attr"` // Defined in XEP-0086, which is already deprecated!
     Text    *XMPPStanzaErrorDescriptiveText `xml:"omitempty"`
+    By      string                          `xml:"by,attr,omitempty"`
 
     BadRequest            *XMPPStanzaErrorBadRequest            `xml:",omitempty"`
     Conflict              *XMPPStanzaErrorConflict              `xml:",omitempty"`
@@ -1026,7 +1085,7 @@ func GenXMPPStreamHeader(s *XMPPStream) string {
         s.From,
         s.To,
         s.Version,
-        s.XmlLang,
+        s.XMLLang,
         s.Id,
         s.Xmlns,
         XMLNS_STREAM)
