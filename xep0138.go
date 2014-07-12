@@ -16,12 +16,12 @@ const (
     XMPP_STREAM_FEATURE_COMPRESSION_METHOD_LZW  = "lzw"
 )
 
-type XMPPStreamCompress struct {
+type XMPPStreamCompressionCompress struct {
     XMLName xml.Name `xml:"http://jabber.org/features/compress compress"`
     Methods []string `xml:"method,omitempty"`
 }
 
-type XMPPStreamCompressed struct {
+type XMPPStreamCompressionCompressed struct {
     XMLName xml.Name `xml:"http://jabber.org/features/compress compressed"`
 }
 

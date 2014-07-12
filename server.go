@@ -1,15 +1,14 @@
 package xmpp
 
 import (
-    // "encoding/xml"
-    "log"
+    log "github.com/golang/glog"
     "net"
 )
 
 type Server struct {
-    dispatcher *ServerDispatcher
-    listener   net.Listener
-    config     *ServerConfig
+    streamDispatcher *StreamEventDispatcher
+    listener         net.Listener
+    config           *ServerConfig
 }
 
 func NewServer(conf *ServerConfig) *Server {
@@ -18,9 +17,9 @@ func NewServer(conf *ServerConfig) *Server {
         panic(err)
     }
     server := &Server{
-        dispatcher: &ServerDispatcher{},
-        listener:   listener,
-        config:     conf,
+        streamDispatcher: NewStreamEventDispatcher(),
+        listener:         listener,
+        config:           conf,
     }
     return server
 }
@@ -29,21 +28,25 @@ func (s *Server) doAccept() {
     for {
         conn, err := s.listener.Accept()
         if err != nil {
-            log.Println(err)
+            log.Errorln(err)
             break
         }
 
-        log.Printf("Client %s connected", conn.RemoteAddr().String())
+        log.Infoln("Client %s connected", conn.RemoteAddr().String())
 
         trans := NewTCPTransport(conn)
         trans.SetReadTimeout()
         NewC2SStream(trans, s)
     }
 
-    log.Println("Server exited")
+    log.Infoln("Server exited")
 }
 
 func (s *Server) Run() {
-    log.Printf("Server listening %s", s.config.ListenAddr)
+    log.Infof("Server listening %s", s.config.ListenAddr)
     s.doAccept()
+}
+
+func (s *Server) AddHandlerForEvent(ev int, hdl XMPPEventHandler) {
+    s.streamDispatcher.AddHandlerForEvent(ev, hdl)
 }

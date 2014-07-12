@@ -80,11 +80,11 @@ func (d *Decoder) ParseElement(startToken xml.StartElement) (interface{}, error)
     // Extensions
     // XEP-0138
     case TAG_STREAM_COMPRESSION_COMPRESS:
-        element = &XMPPStreamCompress{}
+        element = &XMPPStreamCompressionCompress{}
     case TAG_STREAM_COMPRESSION_FAILURE:
         element = &XMPPStreamCompressionFailure{}
     case TAG_STREAM_COMPRESSION_COMPRESSED:
-        element = &XMPPStreamCompressed{}
+        element = &XMPPStreamCompressionCompressed{}
 
     default:
         element = &XMPPCustom{}

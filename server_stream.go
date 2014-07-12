@@ -2,30 +2,28 @@ package xmpp
 
 import (
     "encoding/xml"
-    "log"
+    log "github.com/golang/glog"
     "net"
 )
 
 type C2SStream struct {
-    transport     Transport
-    decoder       *Decoder
-    wchan         chan []byte
-    isClosed      bool
-    state         int
-    jid           *JID
-    server        *Server
-    streamHandler StreamHandler
+    transport Transport
+    decoder   *Decoder
+    wchan     chan []byte
+    isClosed  bool
+    state     int
+    jid       *JID
+    server    *Server
 }
 
 func NewC2SStream(trans Transport, s *Server) *C2SStream {
     stream := &C2SStream{
-        transport:     trans,
-        decoder:       NewDecoder(trans),
-        wchan:         make(chan []byte),
-        isClosed:      false,
-        state:         STREAM_STAT_INIT,
-        server:        s,
-        streamHandler: s.config.StreamHandlerFactory(),
+        transport: trans,
+        decoder:   NewDecoder(trans),
+        wchan:     make(chan []byte),
+        isClosed:  false,
+        state:     STREAM_STAT_INIT,
+        server:    s,
     }
     go stream.asyncWrite()
     go stream.asyncProcess()
@@ -37,17 +35,17 @@ func (s *C2SStream) asyncWrite() {
         _, err := s.transport.Write(data)
 
         if err != nil {
-            log.Printf("%s %s\n", s.transport.RemoteAddr().String(), err)
+            log.Infof("%s %s\n", s.transport.RemoteAddr().String(), err)
             break
         }
     }
 
     if err := s.transport.Close(); err != nil {
-        log.Println(err)
+        log.Errorln(err)
     }
 
     s.isClosed = true
-    log.Printf("Client %s closed", s.transport.RemoteAddr().String())
+    log.Infof("Client %s closed", s.transport.RemoteAddr().String())
 }
 
 func (s *C2SStream) asyncProcess() {
@@ -70,34 +68,8 @@ func (s *C2SStream) asyncProcess() {
             return
         }
 
-        switch t := elem.(type) {
-        case xml.ProcInst:
-
-        // case *XMPPStream:
-        //     if s.state == STREAM_STAT_INIT {
-        //         jid, err := NewJIDFromString(t.From)
-        //         if err != nil {
-        //             resp := &XMPPStreamError{
-        //                 InvalidFrom: &XMPPStreamErrorInvalidFrom{},
-        //             }
-        //             s.SendErrorAndEnd(resp)
-        //             return
-        //         }
-        //         s.jid = jid
-        //         s.StartStream(STREAM_TYPE_CLIENT, "", t.From, t.Version, t.XMLLang)
-        //         s.state |= STREAM_STAT_STARTED
-        //     } else {
-        //         resp := &XMPPStreamError{
-        //             BadFormat: &XMPPStreamErrorBadFormat{},
-        //         }
-        //         s.SendErrorAndEnd(resp)
-        //         return
-        //     }
-        case *XMPPStreamEnd:
-            s.streamHandler.End(s)
-            return
-        default:
-            s.Dispatch(t)
+        if err := s.server.streamDispatcher.Dispatch(s, elem); err != nil {
+            log.Errorln(err)
         }
 
         if s.state == STREAM_STAT_CLOSED {
@@ -116,40 +88,6 @@ func (s *C2SStream) JID() *JID {
 
 func (s *C2SStream) SetJID(jid *JID) {
     s.jid = jid
-}
-
-func (s *C2SStream) Dispatch(elem interface{}) {
-    switch t := elem.(type) {
-    case *XMPPStream:
-        s.streamHandler.Header(s, t)
-        s.state = STREAM_STAT_STARTED
-    case *XMPPStartTLS:
-        s.state = STREAM_STAT_TLS_NEGOCIATION
-        s.streamHandler.TLSNegociation(s, t)
-    case *XMPPTLSProceed:
-        s.streamHandler.TLSNegociation(s, t)
-    case *XMPPTLSAbort:
-        s.streamHandler.TLSNegociation(s, t)
-    case *XMPPTLSFailure:
-        s.streamHandler.TLSNegociation(s, t)
-    case *XMPPSASLAuth:
-        s.state = STREAM_STAT_SASL_NEGOCIATION
-        s.streamHandler.SASLNegociation(s, t)
-    case *XMPPSASLAbort:
-        s.state = STREAM_STAT_SASL_FAILURE
-        s.streamHandler.SASLNegociation(s, t)
-    case *XMPPSASLFailure:
-        s.state = STREAM_STAT_SASL_FAILURE
-        s.streamHandler.SASLNegociation(s, t)
-    case *XMPPSASLSuccess:
-        s.state = STREAM_STAT_SASL_SUCCEED
-        s.streamHandler.SASLNegociation(s, t)
-    case *XMPPSASLChallenge:
-        s.streamHandler.SASLNegociation(s, t)
-
-    default:
-
-    }
 }
 
 func (s *C2SStream) SendBytes(data []byte) {

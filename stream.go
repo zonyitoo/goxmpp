@@ -32,7 +32,6 @@ type Stream interface {
     SendElement(interface{}) error
     Close()
     EndStream()
-    Dispatch(interface{})
     State() int
     SetState(int)
 }

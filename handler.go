@@ -5,35 +5,10 @@ import (
     // "log"
 )
 
-type StanzaHandler interface {
-    Message(Stream, *XMPPStanzaMessage)
-    Present(Stream, *XMPPStanzaPresence)
-    IQ(Stream, *XMPPStanzaIQ)
-    Error(Stream, *XMPPStanzaError)
-}
+type XMPPEventHandler func(Stream, interface{}) bool
 
-type StreamHandler interface {
-    Header(Stream, *XMPPStream)
-    TLSNegociation(Stream, interface{})
-    SASLNegociation(Stream, interface{})
-    Error(Stream, *XMPPStreamError)
-    End(Stream)
-}
-
-type NegociationHandler interface {
-}
-
-type defaultStreamHandler struct {
-    isAuthed bool
-}
-
-func DefaultStreamHandlerFactory() StreamHandler {
-    return &defaultStreamHandler{
-        isAuthed: false,
-    }
-}
-
-func (h *defaultStreamHandler) Header(s Stream, x *XMPPStream) {
+func DefaultStreamHeaderHandler(s Stream, _x interface{}) bool {
+    x, _ := _x.(*XMPPStream)
     if s.State() == STREAM_STAT_INIT {
         s.SendBytes([]byte(xml.Header))
     }
@@ -49,7 +24,7 @@ func (h *defaultStreamHandler) Header(s Stream, x *XMPPStream) {
         s.StartStream(STREAM_TYPE_CLIENT, x.To, x.From, s.ServerConfig().StreamVersion.String(), x.XMLLang)
         s.SendElement(err)
         s.EndStream()
-        return
+        return true
     }
 
     if stype == STREAM_TYPE_CLIENT {
@@ -67,7 +42,7 @@ func (h *defaultStreamHandler) Header(s Stream, x *XMPPStream) {
             }
             s.SendElement(err)
             s.EndStream()
-            return
+            return true
         }
     } else {
         if _, err := NewJIDFromString(x.From); err != nil {
@@ -85,7 +60,7 @@ func (h *defaultStreamHandler) Header(s Stream, x *XMPPStream) {
         }
         s.SendElement(err)
         s.EndStream()
-        return
+        return true
     }
 NO_FROM_ERROR:
 
@@ -106,20 +81,10 @@ NO_FROM_ERROR:
     }
 
     s.StartStream(stype, x.To, x.From, s.ServerConfig().StreamVersion.String(), x.XMLLang)
+    return true
 }
 
-func (h *defaultStreamHandler) TLSNegociation(s Stream, x interface{}) {
-
-}
-
-func (h *defaultStreamHandler) SASLNegociation(s Stream, x interface{}) {
-
-}
-
-func (h *defaultStreamHandler) Error(s Stream, err *XMPPStreamError) {
-
-}
-
-func (h *defaultStreamHandler) End(s Stream) {
+func DefaultStreamEndHandler(s Stream, _ interface{}) bool {
     s.EndStream()
+    return true
 }
