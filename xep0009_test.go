@@ -125,11 +125,11 @@ func Test_RPCParamValueSet(t *testing.T) {
         }
     }
 
-    val.SetValue("Hello")
+    val.SetValue("Hello\x3c<")
     if ival, err := val.Value(); err != nil {
         t.Error(err)
     } else {
-        if iv, ok := ival.(string); !ok || iv != "Hello" {
+        if iv, ok := ival.(string); !ok || iv != "Hello\x3c<" {
             t.Error("Error occurs while setting string value")
         }
     }

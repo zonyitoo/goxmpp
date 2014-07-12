@@ -60,7 +60,12 @@ func value_to_xml(v interface{}) (string, error) {
     case int, int8, int64, int32, *int, *int8, *int64, *int32:
         return fmt.Sprintf("<int>%d</int>", t), nil
     case string:
-        return fmt.Sprintf("<string>%s</string>", t), nil
+        buf := bytes.NewBuffer(make([]byte, 0))
+        err := xml.EscapeText(buf, []byte(t))
+        if err != nil {
+            return "", err
+        }
+        return fmt.Sprintf("<string>%s</string>", buf.String()), nil
     case []byte:
         return fmt.Sprintf("<base64>%s</base64>", base64.StdEncoding.EncodeToString(t)), nil
     case float32, float64, *float32, *float64:
@@ -68,9 +73,19 @@ func value_to_xml(v interface{}) (string, error) {
     case bool:
         return fmt.Sprintf("<boolean>%d</boolean>", t), nil
     case time.Time:
-        return fmt.Sprintf("<dateTime.iso8601>%s</dateTime.iso8601>", t.Format(time_ISO8601_FORMAT)), nil
+        buf := bytes.NewBuffer(make([]byte, 0))
+        err := xml.EscapeText(buf, []byte(t.Format(time_ISO8601_FORMAT)))
+        if err != nil {
+            return "", err
+        }
+        return fmt.Sprintf("<dateTime.iso8601>%s</dateTime.iso8601>", buf.String()), nil
     case *time.Time:
-        return fmt.Sprintf("<dateTime.iso8601>%s</dateTime.iso8601>", t.Format(time_ISO8601_FORMAT)), nil
+        buf := bytes.NewBuffer(make([]byte, 0))
+        err := xml.EscapeText(buf, []byte(t.Format(time_ISO8601_FORMAT)))
+        if err != nil {
+            return "", err
+        }
+        return fmt.Sprintf("<dateTime.iso8601>%s</dateTime.iso8601>", buf.String()), nil
     case []interface{}:
         tmp_str_arr := []string{"<array><data>"}
         for _, v := range t {
