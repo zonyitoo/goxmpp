@@ -8,8 +8,11 @@ import (
     "bytes"
 )
 
-var DecoderBadFormatError = errors.New("Bad format")
-var DecoderUnexpectedEndOfElementError = errors.New("Unexpected end of element")
+var (
+    DecoderBadFormatError              = errors.New("Bad format")
+    DecoderUnexpectedEndOfElementError = errors.New("Unexpected end of element")
+    DecoderRestrictedXMLError          = errors.New("Restricted XML")
+)
 
 type Decoder struct {
     xmlDecoder *xml.Decoder
@@ -118,6 +121,8 @@ func (d *Decoder) GetNextElement() (interface{}, error) {
             if len(bytes.TrimSpace(t)) != 0 {
                 return nil, DecoderBadFormatError
             }
+        case xml.Comment:
+            return nil, DecoderRestrictedXMLError
         }
     }
 }

@@ -539,6 +539,11 @@ type XMPPStreamErrorDescriptiveText struct {
 //       </stream:error>
 //       </stream:stream>
 //
+type XMPPStreamErrorBadFormat struct {
+    XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-streams bad-format"`
+    Text    *XMPPStreamErrorDescriptiveText `xml:",omitempty"`
+}
+
 // RFC6120 Section 4.9.3.13
 //
 // The initiating entity has sent XML that violates the well-formedness rules of [XML] or [XML‑NAMES].
@@ -563,11 +568,6 @@ type XMPPStreamErrorInvalidNamespace struct {
 // to an FQDN that is serviced by the receiving entity.
 type XMPPStreamErrorHostUnknown struct {
     XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-streams host-unknown"`
-    Text    *XMPPStreamErrorDescriptiveText `xml:",omitempty"`
-}
-
-type XMPPStreamErrorBadFormat struct {
-    XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-streams bad-format"`
     Text    *XMPPStreamErrorDescriptiveText `xml:",omitempty"`
 }
 
