@@ -18,7 +18,7 @@ const (
     // Extension
     EVENT_STREAM_COMPRESSION // XEP-0138
 
-    EVENT_INPOSSIBLE
+    EVENT_IMPOSSIBLE
 )
 
 var (
@@ -36,37 +36,47 @@ func NewStreamEventDispatcher() *StreamEventDispatcher {
     }
 }
 
-func (ed *StreamEventDispatcher) Dispatch(s Stream, x interface{}) error {
+func (ed *StreamEventDispatcher) EventOf(x interface{}) int {
     switch x.(type) {
     case *XMPPStream:
-        return ed.dispatch(EVENT_STREAM_HEADER, s, x)
+        return EVENT_STREAM_HEADER
     case *XMPPStreamEnd:
-        return ed.dispatch(EVENT_STREAM_END, s, x)
+        return EVENT_STREAM_END
     case *XMPPStreamFeatures:
-        return ed.dispatch(EVENT_STREAM_FEATURE, s, x)
+        return EVENT_STREAM_FEATURE
     case *XMPPStreamError:
-        return ed.dispatch(EVENT_STREAM_ERROR, s, x)
+        return EVENT_STREAM_ERROR
     case *XMPPStartTLS, *XMPPTLSAbort, *XMPPTLSProceed, *XMPPTLSFailure:
-        return ed.dispatch(EVENT_STREAM_TLS_NEGOCIATION, s, x)
+        return EVENT_STREAM_TLS_NEGOCIATION
     case *XMPPSASLAuth, *XMPPSASLChallenge, *XMPPSASLResponse, *XMPPSASLAbort, *XMPPSASLFailure, *XMPPSASLSuccess:
-        return ed.dispatch(EVENT_STREAM_SASL_NEGOCIATION, s, x)
+        return EVENT_STREAM_SASL_NEGOCIATION
     case *XMPPStanzaIQ:
-        return ed.dispatch(EVENT_STREAM_STANZA_INFO_QUERY, s, x)
+        return EVENT_STREAM_STANZA_INFO_QUERY
     case *XMPPStanzaPresence:
-        return ed.dispatch(EVENT_STREAM_STANZA_PRESENCE, s, x)
+        return EVENT_STREAM_STANZA_PRESENCE
     case *XMPPStanzaMessage:
-        return ed.dispatch(EVENT_STREAM_STANZA_MESSAGE, s, x)
+        return EVENT_STREAM_STANZA_MESSAGE
 
     // Extensions
     // XEP-0138
     case *XMPPStreamCompressionCompress, *XMPPStreamCompressionCompressed, *XMPPStreamCompressionFailure:
-        return ed.dispatch(EVENT_STREAM_COMPRESSION, s, x)
+        return EVENT_STREAM_COMPRESSION
+
+    default:
+        return EVENT_IMPOSSIBLE
+    }
+}
+
+func (ed *StreamEventDispatcher) Dispatch(s Stream, x interface{}) error {
+    ev := ed.EventOf(x)
+    if ev != EVENT_IMPOSSIBLE {
+        return ed.DispatchEvent(ev, s, x)
     }
 
     return EventDispatcherUnrecognizedEventError
 }
 
-func (ed *StreamEventDispatcher) dispatch(ev int, s Stream, x interface{}) error {
+func (ed *StreamEventDispatcher) DispatchEvent(ev int, s Stream, x interface{}) error {
     if hdls, ok := ed.handlers[ev]; !ok {
         return EventDispatcherIgnoredEventError
     } else {
@@ -84,7 +94,7 @@ func (ed *StreamEventDispatcher) AddHandlerForEvent(ev int, hdl XMPPEventHandler
         panic("Handler should not be nil")
     }
 
-    if ev < 0 || ev >= EVENT_INPOSSIBLE {
+    if ev < 0 || ev >= EVENT_IMPOSSIBLE {
         panic("Impossible event code")
     }
 

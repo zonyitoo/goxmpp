@@ -26,8 +26,16 @@ func NewServer(conf *ServerConfig) *Server {
 }
 
 func (server *Server) addDefaultHandlers() {
-    server.AddHandlerForEvent(EVENT_STREAM_HEADER, DefaultStreamHeaderHandler)
+    switch server.config.ServerType {
+    case SERVER_TYPE_C2S:
+        server.AddHandlerForEvent(EVENT_STREAM_HEADER, DefaultC2SStreamHeaderHandler)
+    case SERVER_TYPE_S2S:
+        server.AddHandlerForEvent(EVENT_STREAM_HEADER, DefaultS2SStreamHeaderHandler)
+    default:
+        panic("Impossible server type")
+    }
     server.AddHandlerForEvent(EVENT_STREAM_END, DefaultStreamEndHandler)
+    server.AddHandlerForEvent(EVENT_STREAM_STANZA_INFO_QUERY, DefaultPingServerHandler)
 }
 
 func (s *Server) doAccept() {

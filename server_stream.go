@@ -70,7 +70,53 @@ func (s *C2SStream) asyncProcess() {
 
         log.Debugf("Received from %s with %+v", s.transport.RemoteAddr(), elem)
 
-        if err := s.server.streamDispatcher.Dispatch(s, elem); err != nil {
+        ev := s.server.streamDispatcher.EventOf(elem)
+
+        if ev == EVENT_IMPOSSIBLE {
+            s.SendErrorAndClose(&XMPPStreamError{
+                InvalidXML: &XMPPStreamErrorInvalidXML{},
+            })
+            return
+        }
+
+        if s.State()&STREAM_STAT_STARTED == 0 {
+            if ev != EVENT_STREAM_HEADER {
+                s.SendErrorAndClose(&XMPPStreamError{
+                    InvalidXML: &XMPPStreamErrorInvalidXML{},
+                })
+                return
+            }
+        } else if s.State()&STREAM_STAT_STARTED != 0 && ev == EVENT_STREAM_HEADER {
+            s.SendErrorAndClose(&XMPPStreamError{
+                InvalidXML: &XMPPStreamErrorInvalidXML{},
+            })
+            return
+        } else if s.ServerConfig().UseTLS && s.State()&STREAM_STAT_TLS_PROCEED == 0 && (ev != EVENT_STREAM_TLS_NEGOCIATION && ev != EVENT_STREAM_FEATURE) {
+
+            s.SendErrorAndClose(&XMPPStreamError{
+                InvalidXML: &XMPPStreamErrorInvalidXML{},
+            })
+            return
+
+        } else if s.ServerConfig().UseTLS && s.State()&STREAM_STAT_TLS_PROCEED != 0 && (ev == EVENT_STREAM_TLS_NEGOCIATION || ev == EVENT_STREAM_FEATURE) {
+
+            s.SendErrorAndClose(&XMPPStreamError{
+                InvalidXML: &XMPPStreamErrorInvalidXML{},
+            })
+            return
+
+        } else if s.State()&STREAM_STAT_SASL_SUCCEEDED == 0 {
+            if ev != EVENT_STREAM_SASL_NEGOCIATION && ev != EVENT_STREAM_FEATURE {
+
+                s.SendErrorAndClose(&XMPPStreamError{
+                    NotAuthorized: &XMPPStreamErrorNotAuthorized{},
+                })
+
+                return
+            }
+        }
+
+        if err := s.server.streamDispatcher.DispatchEvent(ev, s, elem); err != nil {
             log.Error(err)
         }
 
