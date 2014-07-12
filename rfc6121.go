@@ -10,9 +10,9 @@ const (
 
 // RFC6121
 type XMPPStanzaIQRosterQuery struct {
-    XMLName xml.Name                  `xml:"jabber:iq:roster query"`
-    Ver     string                    `xml:"ver,attr,omitempty"`
-    Item    []*XMPPStanzaIQRosterItem `xml:",omitempty"`
+    XMLName xml.Name                 `xml:"jabber:iq:roster query"`
+    Ver     string                   `xml:"ver,attr,omitempty"`
+    Item    []XMPPStanzaIQRosterItem `xml:",omitempty"`
 }
 
 type XMPPStanzaIQRosterItem struct {

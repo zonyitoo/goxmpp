@@ -9,37 +9,37 @@ const (
 )
 
 type XMPPStanzaIQVCard struct {
-    XMLName       xml.Name                         `xml:"vcard-temp vCard"`
-    Version       string                           `xml:"VERSION,omitempty"` // MUST be 2.0 if the document conforms to RFC2426
-    FormattedName string                           `xml:"FN,omitempty"`      // Formatted or display name property.
-    Name          *XMPPStanzaIQVCardName           `xml:",omitempty"`
-    Nicknames     []string                         `xml:"NICKNAME,omitempty"`
-    Photos        [][]byte                         `xml:"PHOTO,omitempty"` // Value is either a BASE64 encoded binary value or a URI to the external content.
-    Birthdays     []string                         `xml:"BDAY,omitempty"`  // Value must be an ISO 8601 formatted date or date/time value.
-    Addresses     []*XMPPStanzaIQVCardAddress      `xml",omitempty"`
-    Labels        []*XMPPStanzaIQVCardAddressLabel `xml:",omitempty"`
-    Tels          []*XMPPStanzaIQVCardTel          `xml:",omitempty"`
-    EMails        []*XMPPStanzaIQVCardEMail        `xml:",omitempty"`
-    JabberIDs     []string                         `xml:"JABBERID,omitempty"`
-    Mailers       []string                         `xml:"MAILER,omitempty"`
-    TimeZones     []string                         `xml:"TZ,omitempty"`
-    Geos          []*XMPPStanzaIQVCardGeo          `xml:",omitempty"`
-    Titles        []string                         `xml:"TITLE,omitempty"`
-    Roles         []string                         `xml:"ROLE,omitempty"`
-    Logos         [][]byte                         `xml:"LOGO,omitempty"`
-    AgentVCards   []*XMPPStanzaIQVCardAgent        `xml:",omitempty"`
-    Organizations []*XMPPStanzaIQVCardOrganization `xml:",omitempty"`
-    Categoriess   []*XMPPStanzaIQVCardCategories   `xml:",omitempty"`
-    Notes         []string                         `xml:"NOTE,omitempty"`
-    ProdIDs       []string                         `xml:"PRODID,omitempty"`
-    Revs          []string                         `xml:"REV,omitempty"`
-    SortStrings   []string                         `xml:"SORT-STRING,omitempty"`
-    Sounds        []string                         `xml:"SOUND,omitempty"`
-    UIDs          []string                         `xml:"UID,omitempty"`
-    URLs          []string                         `xml:"URL,omitempty"`
-    Classes       []*XMPPStanzaIQVCardClass        `xml:",omitempty"`
-    Keys          []*XMPPStanzaIQVCardKey          `xml:",omitempty"`
-    Desc          string                           `xml:"DESC,omitempty"`
+    XMLName       xml.Name                        `xml:"vcard-temp vCard"`
+    Version       string                          `xml:"VERSION,omitempty"` // MUST be 2.0 if the document conforms to RFC2426
+    FormattedName string                          `xml:"FN,omitempty"`      // Formatted or display name property.
+    Name          *XMPPStanzaIQVCardName          `xml:",omitempty"`
+    Nicknames     []string                        `xml:"NICKNAME,omitempty"`
+    Photos        [][]byte                        `xml:"PHOTO,omitempty"` // Value is either a BASE64 encoded binary value or a URI to the external content.
+    Birthdays     []string                        `xml:"BDAY,omitempty"`  // Value must be an ISO 8601 formatted date or date/time value.
+    Addresses     []XMPPStanzaIQVCardAddress      `xml",omitempty"`
+    Labels        []XMPPStanzaIQVCardAddressLabel `xml:",omitempty"`
+    Tels          []XMPPStanzaIQVCardTel          `xml:",omitempty"`
+    EMails        []XMPPStanzaIQVCardEMail        `xml:",omitempty"`
+    JabberIDs     []string                        `xml:"JABBERID,omitempty"`
+    Mailers       []string                        `xml:"MAILER,omitempty"`
+    TimeZones     []string                        `xml:"TZ,omitempty"`
+    Geos          []XMPPStanzaIQVCardGeo          `xml:",omitempty"`
+    Titles        []string                        `xml:"TITLE,omitempty"`
+    Roles         []string                        `xml:"ROLE,omitempty"`
+    Logos         [][]byte                        `xml:"LOGO,omitempty"`
+    AgentVCards   []XMPPStanzaIQVCardAgent        `xml:",omitempty"`
+    Organizations []XMPPStanzaIQVCardOrganization `xml:",omitempty"`
+    Categoriess   []XMPPStanzaIQVCardCategories   `xml:",omitempty"`
+    Notes         []string                        `xml:"NOTE,omitempty"`
+    ProdIDs       []string                        `xml:"PRODID,omitempty"`
+    Revs          []string                        `xml:"REV,omitempty"`
+    SortStrings   []string                        `xml:"SORT-STRING,omitempty"`
+    Sounds        []string                        `xml:"SOUND,omitempty"`
+    UIDs          []string                        `xml:"UID,omitempty"`
+    URLs          []string                        `xml:"URL,omitempty"`
+    Classes       []XMPPStanzaIQVCardClass        `xml:",omitempty"`
+    Keys          []XMPPStanzaIQVCardKey          `xml:",omitempty"`
+    Desc          string                          `xml:"DESC,omitempty"`
 }
 
 type XMPPStanzaIQVCardName struct {

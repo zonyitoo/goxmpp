@@ -9,10 +9,10 @@ const (
 )
 
 type XMPPXData struct {
-    XMLName xml.Name          `xml:"jabber:x:data x"`
-    Type    string            `xml:"type,attr,omitempty"`
-    Fields  []*XMPPXDataField `xml:",omitempty"`
-    Title   string            `xml:"title,omitempty"`
+    XMLName xml.Name         `xml:"jabber:x:data x"`
+    Type    string           `xml:"type,attr,omitempty"`
+    Fields  []XMPPXDataField `xml:",omitempty"`
+    Title   string           `xml:"title,omitempty"`
 }
 
 const (
@@ -23,14 +23,14 @@ const (
 )
 
 type XMPPXDataField struct {
-    XMLName        xml.Name                       `xml:"field"`
-    Var            string                         `xml:"var,attr,omitempty"`
-    Label          string                         `xml:"label,attr,omitempty"`
-    Type           string                         `xml:"type,attr,omitempty"`
-    Values         []string                       `xml:"value,omitempty"`
-    OptionalValues []*XMPPXDataFieldOptionalValue `xml:",omitempty"`
-    Required       *XMPPRequired                  `xml:",omitempty"`
-    Desc           string                         `xml:"desc,omitempty"`
+    XMLName        xml.Name                      `xml:"field"`
+    Var            string                        `xml:"var,attr,omitempty"`
+    Label          string                        `xml:"label,attr,omitempty"`
+    Type           string                        `xml:"type,attr,omitempty"`
+    Values         []string                      `xml:"value,omitempty"`
+    OptionalValues []XMPPXDataFieldOptionalValue `xml:",omitempty"`
+    Required       *XMPPRequired                 `xml:",omitempty"`
+    Desc           string                        `xml:"desc,omitempty"`
 }
 
 const (
@@ -53,11 +53,11 @@ type XMPPXDataFieldOptionalValue struct {
 }
 
 type XMPPXDataItem struct {
-    XMLName xml.Name          `xml:"item"`
-    Fields  []*XMPPXDataField `xml:",omitempty"`
+    XMLName xml.Name         `xml:"item"`
+    Fields  []XMPPXDataField `xml:",omitempty"`
 }
 
 type XMPPXDataReported struct {
-    XMLName xml.Name          `xml:"reported"`
-    Fields  []*XMPPXDataField `xml:",omitempty"`
+    XMLName xml.Name         `xml:"reported"`
+    Fields  []XMPPXDataField `xml:",omitempty"`
 }

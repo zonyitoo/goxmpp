@@ -1,6 +1,7 @@
 package xmpp
 
 import (
+    "bytes"
     "encoding/xml"
     "reflect"
     "testing"
@@ -138,7 +139,7 @@ func Test_RPCParamValueSet(t *testing.T) {
     if ival, err := val.Value(); err != nil {
         t.Error(err)
     } else {
-        if iv, ok := ival.([]byte); !ok || !reflect.DeepEqual(iv, []byte("\x00\x01\x02\x03\x04")) {
+        if iv, ok := ival.([]byte); !ok || !bytes.Equal(iv, []byte("\x00\x01\x02\x03\x04")) {
             t.Error("Error occurs while setting base64 value")
         }
     }

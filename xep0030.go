@@ -5,10 +5,10 @@ import (
 )
 
 type XMPPProtocolDiscoInfoQuery struct {
-    XMLName    xml.Name                         `xml:"http://jabber.org/protocol/disco#info query"`
-    Identities []*XMPPProtocolDiscoInfoIdentity `xml:",omitempty"`
-    Features   []*XMPPProtocolDiscoInfoFeature  `xml:",omitempty"`
-    Node       string                           `xml:"node,attr,omitempty"`
+    XMLName    xml.Name                        `xml:"http://jabber.org/protocol/disco#info query"`
+    Identities []XMPPProtocolDiscoInfoIdentity `xml:",omitempty"`
+    Features   []XMPPProtocolDiscoInfoFeature  `xml:",omitempty"`
+    Node       string                          `xml:"node,attr,omitempty"`
 
     // XEP-0128
     XData *XMPPXData `xml:",omitempty"`
@@ -27,9 +27,9 @@ type XMPPProtocolDiscoInfoFeature struct {
 }
 
 type XMPPProtocolDiscoItemQuery struct {
-    XMLName xml.Name                      `xml:"http://jabber.org/protocol/disco#item query"`
-    Items   []*XMPPProtocolDiscoItemsItem `xml:",omitempty"`
-    Node    string                        `xml:"node,attr,omitempty"`
+    XMLName xml.Name                     `xml:"http://jabber.org/protocol/disco#item query"`
+    Items   []XMPPProtocolDiscoItemsItem `xml:",omitempty"`
+    Node    string                       `xml:"node,attr,omitempty"`
 }
 
 type XMPPProtocolDiscoItemsItem struct {
