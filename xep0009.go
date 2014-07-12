@@ -56,7 +56,7 @@ func (val *XMPPStanzaIQRPCParamValue) Value() (interface{}, error) {
 
 func value_to_xml(v interface{}) (string, error) {
     switch t := v.(type) {
-    case int, int64, int32, *int, *int64, *int32:
+    case int, int8, int64, int32, *int, *int8, *int64, *int32:
         return fmt.Sprintf("<int>%d</int>", t), nil
     case string:
         return fmt.Sprintf("<string>%s</string>", t), nil

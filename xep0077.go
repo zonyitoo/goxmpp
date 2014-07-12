@@ -13,6 +13,8 @@ type XMPPStanzaIQRegisterQuery struct {
     Instructions string                          `xml:"instructions,omitempty"`
     Registered   *XMPPStanzaIQRegisterRegistered `xml:",omitempty"`
     Remove       *XMPPStanzaIQRegisterRemove     `xml:",omitempty"`
+    XData        *XMPPXData                      `xml:",omitempty"` // XEP-0004
+    XOOB         *XMPPXOutOfBandData             `xml:",omitempty"` // XEP-0066
 
     Username string `xml:"username,omitempty"`
     Password string `xml:"password,omitempty"`

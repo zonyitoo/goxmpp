@@ -133,4 +133,14 @@ func Test_RPCParamValueSet(t *testing.T) {
             t.Error("Error occurs while setting string value")
         }
     }
+
+    arr := []interface{}{"Fuck", "Hello", 1, 1.1}
+    val.SetValue(arr)
+    if ival, err := val.Value(); err != nil {
+        t.Error(err)
+    } else {
+        if iv, ok := ival.([]interface{}); !ok || !reflect.DeepEqual(iv, arr) {
+            t.Error("Error occurs while setting Array value")
+        }
+    }
 }

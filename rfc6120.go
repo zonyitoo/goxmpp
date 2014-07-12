@@ -8,31 +8,32 @@ import (
 const (
     XMLNS_JABBER_CLIENT = "jabber:client"
     XMLNS_JABBER_SERVER = "jabber:server"
-
-    XMLNS_STREAM       = "http://etherx.jabber.org/streams"
-    XMLNS_XMPP_TLS     = "urn:ietf:params:xml:ns:xmpp-tls"
-    XMLNS_XMPP_SASL    = "urn:ietf:params:xml:ns:xmpp-sasl"
-    XMLNS_XMPP_BIND    = "urn:ietf:params:xml:ns:xmpp-bind"
-    XMLNS_XMPP_STANZAS = "urn:ietf:params:xml:ns:xmpp-stanzas"
+    XMLNS_STREAM        = "http://etherx.jabber.org/streams"
+    XMLNS_XMPP_TLS      = "urn:ietf:params:xml:ns:xmpp-tls"
+    XMLNS_XMPP_SASL     = "urn:ietf:params:xml:ns:xmpp-sasl"
+    XMLNS_XMPP_BIND     = "urn:ietf:params:xml:ns:xmpp-bind"
+    XMLNS_XMPP_STANZAS  = "urn:ietf:params:xml:ns:xmpp-stanzas"
 )
 
-var TAG_STREAM xml.Name = xml.Name{Space: XMLNS_STREAM, Local: "stream"}
-var TAG_STREAM_FEATURES xml.Name = xml.Name{Space: XMLNS_STREAM, Local: "features"}
-var TAG_TLS_START xml.Name = xml.Name{Space: XMLNS_XMPP_TLS, Local: "starttls"}
-var TAG_TLS_PROCEED xml.Name = xml.Name{Space: XMLNS_XMPP_TLS, Local: "proceed"}
-var TAG_TLS_FAILURE xml.Name = xml.Name{Space: XMLNS_XMPP_TLS, Local: "failure"}
-var TAG_TLS_ABORT xml.Name = xml.Name{Space: XMLNS_XMPP_TLS, Local: "abort"}
-var TAG_SASL_AUTH xml.Name = xml.Name{Space: XMLNS_XMPP_SASL, Local: "auth"}
-var TAG_SASL_CHALLENGE xml.Name = xml.Name{Space: XMLNS_XMPP_SASL, Local: "challenge"}
-var TAG_SASL_RESPONSE xml.Name = xml.Name{Space: XMLNS_XMPP_SASL, Local: "response"}
-var TAG_SASL_SUCCESS xml.Name = xml.Name{Space: XMLNS_XMPP_SASL, Local: "success"}
-var TAG_SASL_FAILURE xml.Name = xml.Name{Space: XMLNS_XMPP_SASL, Local: "failure"}
-var TAG_STANZA_IQ_CLIENT xml.Name = xml.Name{Space: XMLNS_JABBER_CLIENT, Local: "iq"}
-var TAG_STANZA_IQ_SERVER xml.Name = xml.Name{Space: XMLNS_JABBER_SERVER, Local: "iq"}
-var TAG_STANZA_PRESENCE_CLIENT xml.Name = xml.Name{Space: XMLNS_JABBER_CLIENT, Local: "presence"}
-var TAG_STANZA_PRESENCE_SERVER xml.Name = xml.Name{Space: XMLNS_JABBER_SERVER, Local: "presence"}
-var TAG_STANZA_MESSAGE_CLIENT xml.Name = xml.Name{Space: XMLNS_JABBER_CLIENT, Local: "message"}
-var TAG_STANZA_MESSAGE_SERVER xml.Name = xml.Name{Space: XMLNS_JABBER_SERVER, Local: "message"}
+var (
+    TAG_STREAM                 xml.Name = xml.Name{Space: XMLNS_STREAM, Local: "stream"}
+    TAG_STREAM_FEATURES        xml.Name = xml.Name{Space: XMLNS_STREAM, Local: "features"}
+    TAG_TLS_START              xml.Name = xml.Name{Space: XMLNS_XMPP_TLS, Local: "starttls"}
+    TAG_TLS_PROCEED            xml.Name = xml.Name{Space: XMLNS_XMPP_TLS, Local: "proceed"}
+    TAG_TLS_FAILURE            xml.Name = xml.Name{Space: XMLNS_XMPP_TLS, Local: "failure"}
+    TAG_TLS_ABORT              xml.Name = xml.Name{Space: XMLNS_XMPP_TLS, Local: "abort"}
+    TAG_SASL_AUTH              xml.Name = xml.Name{Space: XMLNS_XMPP_SASL, Local: "auth"}
+    TAG_SASL_CHALLENGE         xml.Name = xml.Name{Space: XMLNS_XMPP_SASL, Local: "challenge"}
+    TAG_SASL_RESPONSE          xml.Name = xml.Name{Space: XMLNS_XMPP_SASL, Local: "response"}
+    TAG_SASL_SUCCESS           xml.Name = xml.Name{Space: XMLNS_XMPP_SASL, Local: "success"}
+    TAG_SASL_FAILURE           xml.Name = xml.Name{Space: XMLNS_XMPP_SASL, Local: "failure"}
+    TAG_STANZA_IQ_CLIENT       xml.Name = xml.Name{Space: XMLNS_JABBER_CLIENT, Local: "iq"}
+    TAG_STANZA_IQ_SERVER       xml.Name = xml.Name{Space: XMLNS_JABBER_SERVER, Local: "iq"}
+    TAG_STANZA_PRESENCE_CLIENT xml.Name = xml.Name{Space: XMLNS_JABBER_CLIENT, Local: "presence"}
+    TAG_STANZA_PRESENCE_SERVER xml.Name = xml.Name{Space: XMLNS_JABBER_SERVER, Local: "presence"}
+    TAG_STANZA_MESSAGE_CLIENT  xml.Name = xml.Name{Space: XMLNS_JABBER_CLIENT, Local: "message"}
+    TAG_STANZA_MESSAGE_SERVER  xml.Name = xml.Name{Space: XMLNS_JABBER_SERVER, Local: "message"}
+)
 
 // RFC6120 Section 4
 type XMPPStream struct {
@@ -50,13 +51,11 @@ type XMPPStreamEnd struct {
 }
 
 type XMPPStreamFeatures struct {
-    XMLName        xml.Name            `xml:"http://etherx.jabber.org/streams features"`
-    StartTLS       *XMPPStartTLS       `xml:",omitempty"`
-    SASLMechanisms *XMPPSASLMechanisms `xml:",omitempty"`
-    Bind           *XMPPBind           `xml:",omitempty"`
-
-    // XEP-0077
-    Register *XMPPStreamFeatureRegister `xml:",omitempty"`
+    XMLName        xml.Name                   `xml:"http://etherx.jabber.org/streams features"`
+    StartTLS       *XMPPStartTLS              `xml:",omitempty"`
+    SASLMechanisms *XMPPSASLMechanisms        `xml:",omitempty"`
+    Bind           *XMPPBind                  `xml:",omitempty"`
+    Register       *XMPPStreamFeatureRegister `xml:",omitempty"` // XEP-0077
 }
 
 type XMPPRequired struct {
