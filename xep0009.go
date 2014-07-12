@@ -2,6 +2,7 @@ package xmpp
 
 import (
     "bytes"
+    "encoding/base64"
     "encoding/xml"
     "errors"
     "fmt"
@@ -61,7 +62,7 @@ func value_to_xml(v interface{}) (string, error) {
     case string:
         return fmt.Sprintf("<string>%s</string>", t), nil
     case []byte:
-        return fmt.Sprintf("<string>%s</string>", string(t)), nil
+        return fmt.Sprintf("<base64>%s</base64>", base64.StdEncoding.EncodeToString(t)), nil
     case float32, float64, *float32, *float64:
         return fmt.Sprintf("<double>%f</double>", t), nil
     case bool:
@@ -115,8 +116,10 @@ func (val *XMPPStanzaIQRPCParamValue) parse_value(decoder *xml.Decoder, token xm
             switch se.Name.Local {
             case "i1", "i2", "i4", "i8", "int":
                 return val.parse_int(decoder, se)
-            case "string", "base64":
+            case "string":
                 return val.parse_string(decoder, se)
+            case "base64":
+                return val.parse_base64(decoder, se)
             case "double":
                 return val.parse_double(decoder, se)
             case "boolean":
@@ -169,6 +172,18 @@ func (val *XMPPStanzaIQRPCParamValue) parse_string(decoder *xml.Decoder, se xml.
             return nil, errors.New(fmt.Sprintf("Unexpected element. Expecting Chardata, got %+v", t))
         } else {
             return string(cdata), nil
+        }
+    }
+}
+
+func (val *XMPPStanzaIQRPCParamValue) parse_base64(decoder *xml.Decoder, se xml.StartElement) (interface{}, error) {
+    if t, err := decoder.Token(); err != nil {
+        return nil, err
+    } else {
+        if cdata, ok := t.(xml.CharData); !ok {
+            return nil, errors.New(fmt.Sprintf("Unexpected element. Expecting Chardata, got %+v", t))
+        } else {
+            return base64.StdEncoding.DecodeString(string(cdata))
         }
     }
 }

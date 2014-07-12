@@ -20,7 +20,7 @@ func Test_RPCParamValue(t *testing.T) {
                         <value><string>Colorado</string></value>
                     </param>
                     <param>
-                        <value><base64>SGVsbG8gV29ybGQK</base64></value>
+                        <value><base64>c29tZSBkYXRhIHdpdGggACBhbmQg77u/</base64></value>
                     </param>
                     <param>
                         <value><double>11.2</double></value>
@@ -71,7 +71,7 @@ func Test_RPCParamValue(t *testing.T) {
     validval_call := []interface{}{
         6,
         "Colorado",
-        "SGVsbG8gV29ybGQK",
+        []byte("some data with \x00 and \ufeff"),
         11.2,
         true,
         validval_call_time,
@@ -131,6 +131,15 @@ func Test_RPCParamValueSet(t *testing.T) {
     } else {
         if iv, ok := ival.(string); !ok || iv != "Hello" {
             t.Error("Error occurs while setting string value")
+        }
+    }
+
+    val.SetValue([]byte("\x00\x01\x02\x03\x04"))
+    if ival, err := val.Value(); err != nil {
+        t.Error(err)
+    } else {
+        if iv, ok := ival.([]byte); !ok || !reflect.DeepEqual(iv, []byte("\x00\x01\x02\x03\x04")) {
+            t.Error("Error occurs while setting base64 value")
         }
     }
 
