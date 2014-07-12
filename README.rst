@@ -12,8 +12,8 @@ Dependences
 
 Defined in ``requirements.txt``
 
-* `uuid<http://code.google.com/p/go-uuid/uuid>`_
-* `glog<github.com/golang/glog>`_
+* `uuid <http://code.google.com/p/go-uuid/uuid>`_
+* `glog <github.com/golang/glog>`_
 
 Currently Working on
 ====================
