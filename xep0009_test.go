@@ -1,9 +1,8 @@
 package xmpp
 
 import (
-    "bytes"
     "encoding/xml"
-    "reflect"
+    "github.com/stretchr/testify/assert"
     "testing"
     "time"
 )
@@ -93,10 +92,11 @@ func Test_RPCParamValue(t *testing.T) {
         },
     }
 
+    assert := assert.New(t)
+
     query := &XMPPStanzaIQRPCQuery{}
-    if err := xml.Unmarshal([]byte(testxml), query); err != nil {
-        t.Error(err)
-    }
+    err := xml.Unmarshal([]byte(testxml), query)
+    assert.NoError(err, err)
 
     for idx, val := range query.MethodCall.Params {
         validate_value(&val.Value, validval_call[idx], t)
@@ -110,60 +110,25 @@ func Test_RPCParamValue(t *testing.T) {
 
 func validate_value(value *XMPPStanzaIQRPCParamValue, validval interface{}, t *testing.T) {
     val, err := value.Value()
-    if err != nil {
-        t.Error(err)
-    } else {
-        if !reflect.DeepEqual(val, validval) {
-            t.Errorf("%s != %s", val, validval)
-        }
-    }
+    assert.NoError(t, err, err)
+    assert.Equal(t, val, validval, "%+v != %+v", val, validval)
 }
 
 func Test_RPCParamValueSet(t *testing.T) {
     val := XMPPStanzaIQRPCParamValue{}
-    val.SetValue(1)
-    if ival, err := val.Value(); err != nil {
-        t.Error(err)
-    } else {
-        if iv, ok := ival.(int); !ok || iv != 1 {
-            t.Error("Error occurs while setting int value")
-        }
+
+    val_to_set := []interface{}{
+        1,
+        "Hello\x3c<",
+        []byte("\x00\x01\x02\x03\x04"),
+        []interface{}{"Fuck", []byte("Hello"), 1, 1.1},
+        true,
     }
 
-    val.SetValue("Hello\x3c<")
-    if ival, err := val.Value(); err != nil {
-        t.Error(err)
-    } else {
-        if iv, ok := ival.(string); !ok || iv != "Hello\x3c<" {
-            t.Error("Error occurs while setting string value")
-        }
-    }
-
-    val.SetValue([]byte("\x00\x01\x02\x03\x04"))
-    if ival, err := val.Value(); err != nil {
-        t.Error(err)
-    } else {
-        if iv, ok := ival.([]byte); !ok || !bytes.Equal(iv, []byte("\x00\x01\x02\x03\x04")) {
-            t.Error("Error occurs while setting base64 value")
-        }
-    }
-
-    arr := []interface{}{"Fuck", "Hello", 1, 1.1}
-    val.SetValue(arr)
-    if ival, err := val.Value(); err != nil {
-        t.Error(err)
-    } else {
-        if iv, ok := ival.([]interface{}); !ok || !reflect.DeepEqual(iv, arr) {
-            t.Error("Error occurs while setting Array value")
-        }
-    }
-
-    val.SetValue(true)
-    if ival, err := val.Value(); err != nil {
-        t.Error(err)
-    } else {
-        if iv, ok := ival.(bool); !ok || iv != true {
-            t.Error("Error occurs while setting Bool value")
-        }
+    for _, ival := range val_to_set {
+        assert.NoError(t, val.SetValue(ival), "Error occurs while setting %+v", ival)
+        rval, err := val.Value()
+        assert.NoError(t, err, err)
+        assert.Equal(t, ival, rval, "%+v != %+v", ival, rval)
     }
 }
