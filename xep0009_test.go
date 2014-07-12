@@ -30,6 +30,9 @@ func Test_RPCParamValue(t *testing.T) {
                         <value><boolean>1</boolean></value>
                     </param>
                     <param>
+                        <value><boolean>0</boolean></value>
+                    </param>
+                    <param>
                         <value><dateTime.iso8601>20100101T15:04:05</dateTime.iso8601></value>
                     </param>
                 </params>
@@ -75,6 +78,7 @@ func Test_RPCParamValue(t *testing.T) {
         []byte("some data with \x00 and \ufeff"),
         11.2,
         true,
+        false,
         validval_call_time,
     }
 
@@ -151,6 +155,15 @@ func Test_RPCParamValueSet(t *testing.T) {
     } else {
         if iv, ok := ival.([]interface{}); !ok || !reflect.DeepEqual(iv, arr) {
             t.Error("Error occurs while setting Array value")
+        }
+    }
+
+    val.SetValue(true)
+    if ival, err := val.Value(); err != nil {
+        t.Error(err)
+    } else {
+        if iv, ok := ival.(bool); !ok || iv != true {
+            t.Error("Error occurs while setting Bool value")
         }
     }
 }

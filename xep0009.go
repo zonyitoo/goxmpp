@@ -55,6 +55,13 @@ func (val *XMPPStanzaIQRPCParamValue) Value() (interface{}, error) {
     return val.parse_value(decoder, token)
 }
 
+func btoi(b bool) int {
+    if b == false {
+        return 0
+    }
+    return 1
+}
+
 func value_to_xml(v interface{}) (string, error) {
     switch t := v.(type) {
     case int, int8, int64, int32, *int, *int8, *int64, *int32:
@@ -71,7 +78,7 @@ func value_to_xml(v interface{}) (string, error) {
     case float32, float64, *float32, *float64:
         return fmt.Sprintf("<double>%f</double>", t), nil
     case bool:
-        return fmt.Sprintf("<boolean>%d</boolean>", t), nil
+        return fmt.Sprintf("<boolean>%d</boolean>", btoi(t)), nil
     case time.Time:
         buf := bytes.NewBuffer(make([]byte, 0))
         err := xml.EscapeText(buf, []byte(t.Format(time_ISO8601_FORMAT)))
