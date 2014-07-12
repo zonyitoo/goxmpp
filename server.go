@@ -1,7 +1,7 @@
 package xmpp
 
 import (
-    log "github.com/golang/glog"
+    log "github.com/cihub/seelog"
     "net"
 )
 
@@ -21,25 +21,31 @@ func NewServer(conf *ServerConfig) *Server {
         listener:         listener,
         config:           conf,
     }
+    server.addDefaultHandlers()
     return server
+}
+
+func (server *Server) addDefaultHandlers() {
+    server.AddHandlerForEvent(EVENT_STREAM_HEADER, DefaultStreamHeaderHandler)
+    server.AddHandlerForEvent(EVENT_STREAM_END, DefaultStreamEndHandler)
 }
 
 func (s *Server) doAccept() {
     for {
         conn, err := s.listener.Accept()
         if err != nil {
-            log.Errorln(err)
+            log.Error(err)
             break
         }
 
-        log.Infoln("Client %s connected", conn.RemoteAddr().String())
+        log.Infof("Client %s connected", conn.RemoteAddr().String())
 
         trans := NewTCPTransport(conn)
         trans.SetReadTimeout()
         NewC2SStream(trans, s)
     }
 
-    log.Infoln("Server exited")
+    log.Info("Server exited")
 }
 
 func (s *Server) Run() {

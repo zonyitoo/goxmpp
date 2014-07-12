@@ -1,38 +1,31 @@
 package xmpp
 
 import (
-    "encoding/xml"
-    // "log"
+    log "github.com/cihub/seelog"
 )
 
 type XMPPEventHandler func(Stream, interface{}) bool
 
 func DefaultStreamHeaderHandler(s Stream, _x interface{}) bool {
-    x, _ := _x.(*XMPPStream)
-    if s.State() == STREAM_STAT_INIT {
-        s.SendBytes([]byte(xml.Header))
-    }
-    var stype int
-    if x.Xmlns == XMLNS_JABBER_CLIENT {
-        stype = STREAM_TYPE_CLIENT
-    } else if x.Xmlns == XMLNS_JABBER_SERVER {
-        stype = STREAM_TYPE_SERVER
-    } else {
+    if s.State()&STREAM_STAT_STARTED != 0 {
         err := XMPPStreamError{
-            InvalidNamespace: &XMPPStreamErrorInvalidNamespace{},
+            InvalidXML: &XMPPStreamErrorInvalidXML{},
         }
-        s.StartStream(STREAM_TYPE_CLIENT, x.To, x.From, s.ServerConfig().StreamVersion.String(), x.XMLLang)
-        s.SendElement(err)
-        s.EndStream()
+        log.Errorf("JID:`%s` stream is already started", s.JID())
+        s.SendErrorAndClose(err)
         return true
     }
 
-    if stype == STREAM_TYPE_CLIENT {
+    x, _ := _x.(*XMPPStream)
+
+    if x.Xmlns == XMLNS_JABBER_CLIENT {
         if x.From != "" {
             if from_jid, err := NewJIDFromString(x.From); err != nil {
                 goto CLIENT_FROM_ERROR
             } else if from_jid.Domain != x.To {
                 goto CLIENT_FROM_ERROR
+            } else {
+                s.SetJID(from_jid)
             }
 
             goto NO_FROM_ERROR
@@ -40,26 +33,14 @@ func DefaultStreamHeaderHandler(s Stream, _x interface{}) bool {
             err := XMPPStreamError{
                 InvalidFrom: &XMPPStreamErrorInvalidFrom{},
             }
-            s.SendElement(err)
-            s.EndStream()
+            s.SendErrorAndClose(err)
             return true
         }
     } else {
-        if _, err := NewJIDFromString(x.From); err != nil {
-            goto SERVER_FROM_ERROR
-        }
-
-        if _, err := NewJIDFromString(x.To); err != nil {
-            goto SERVER_FROM_ERROR
-        }
-
-        goto NO_FROM_ERROR
-    SERVER_FROM_ERROR:
         err := XMPPStreamError{
-            InvalidFrom: &XMPPStreamErrorInvalidFrom{},
+            InvalidNamespace: &XMPPStreamErrorInvalidNamespace{},
         }
-        s.SendElement(err)
-        s.EndStream()
+        s.SendErrorAndClose(err)
         return true
     }
 NO_FROM_ERROR:
@@ -75,12 +56,12 @@ NO_FROM_ERROR:
         err := XMPPStreamError{
             UnsupportedVersion: &XMPPStreamErrorUnsupportedVersion{},
         }
-        s.StartStream(stype, x.To, x.From, s.ServerConfig().StreamVersion.String(), x.XMLLang)
-        s.SendElement(err)
-        s.EndStream()
+        s.SendErrorAndClose(err)
+        return true
     }
 
-    s.StartStream(stype, x.To, x.From, s.ServerConfig().StreamVersion.String(), x.XMLLang)
+    s.StartStream(STREAM_TYPE_CLIENT, x.To, x.From, s.ServerConfig().StreamVersion.String(), x.XMLLang)
+    s.SetState(s.State() | STREAM_STAT_STARTED)
     return true
 }
 

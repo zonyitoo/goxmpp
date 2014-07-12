@@ -89,7 +89,8 @@ func (ed *StreamEventDispatcher) AddHandlerForEvent(ev int, hdl XMPPEventHandler
     }
 
     if _, ok := ed.handlers[ev]; !ok {
-        ed.handlers[ev] = make([]XMPPEventHandler, 0)
+        ed.handlers[ev] = []XMPPEventHandler{hdl}
+    } else {
+        ed.handlers[ev] = append([]XMPPEventHandler{hdl}, ed.handlers[ev]...)
     }
-    ed.handlers[ev] = append(ed.handlers[ev], hdl)
 }

@@ -13,7 +13,7 @@ Dependences
 Defined in ``requirements.txt``
 
 * `uuid <http://code.google.com/p/go-uuid/uuid>`_
-* `glog <http://github.com/golang/glog>`_
+* `seelog <http://github.com/cihub/seelog>`_
 * `testify <http://github.com/stretchr/testify>`_
 
 Currently Working on

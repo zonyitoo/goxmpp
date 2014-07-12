@@ -2,7 +2,7 @@ package xmpp
 
 import (
     "encoding/xml"
-    log "github.com/golang/glog"
+    log "github.com/cihub/seelog"
     "net"
 )
 
@@ -41,7 +41,7 @@ func (s *C2SStream) asyncWrite() {
     }
 
     if err := s.transport.Close(); err != nil {
-        log.Errorln(err)
+        log.Error(err)
     }
 
     s.isClosed = true
@@ -62,14 +62,16 @@ func (s *C2SStream) asyncProcess() {
                 } else {
                     resp.NotWellFormed = &XMPPStreamErrorNotWellFormed{}
                 }
-                s.SendElement(resp)
-                s.EndStream()
+                s.SendErrorAndClose(resp)
             }
+            log.Errorf("Decoding error: %s", err)
             return
         }
 
+        log.Debugf("Received from %s with %+v", s.transport.RemoteAddr(), elem)
+
         if err := s.server.streamDispatcher.Dispatch(s, elem); err != nil {
-            log.Errorln(err)
+            log.Error(err)
         }
 
         if s.state == STREAM_STAT_CLOSED {
@@ -98,6 +100,9 @@ func (s *C2SStream) SendBytes(data []byte) {
 }
 
 func (s *C2SStream) StartStream(stype int, from, to, version, lang string) {
+    if s.State() == STREAM_STAT_INIT {
+        s.SendBytes([]byte(xml.Header))
+    }
     header := &XMPPStream{
         From:    from,
         To:      to,
@@ -124,6 +129,26 @@ func (s *C2SStream) SendElement(elem interface{}) error {
         return err
     }
     s.SendBytes(b)
+    return nil
+}
+
+func (s *C2SStream) SendErrorAndClose(e interface{}) error {
+    if s.State()&STREAM_STAT_STARTED == 0 {
+        jidstr := ""
+        if s.JID() != nil {
+            jidstr = s.JID().String()
+        }
+        s.StartStream(STREAM_TYPE_CLIENT,
+            s.ServerConfig().ServerName,
+            jidstr,
+            s.ServerConfig().StreamVersion.String(),
+            "en")
+    }
+    err := s.SendElement(e)
+    if err != nil {
+        return err
+    }
+    s.EndStream()
     return nil
 }
 

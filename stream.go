@@ -13,13 +13,10 @@ const (
 )
 
 const (
-    STREAM_STAT_INIT = iota
-    STREAM_STAT_STARTED
-    STREAM_STAT_TLS_NEGOCIATION
-    STREAM_STAT_TLS_FAILURE
-    STREAM_STAT_SASL_NEGOCIATION
-    STREAM_STAT_SASL_FAILURE
-    STREAM_STAT_SASL_SUCCEED
+    STREAM_STAT_INIT    = 0
+    STREAM_STAT_STARTED = 1 << iota
+    STREAM_STAT_TLS_PROCEED
+    STREAM_STAT_SASL_SUCCEEDED
     STREAM_STAT_CLOSED
 )
 
@@ -30,6 +27,7 @@ type Stream interface {
     SendBytes([]byte)
     StartStream(stype int, from, to, version, lang string)
     SendElement(interface{}) error
+    SendErrorAndClose(interface{}) error
     Close()
     EndStream()
     State() int
