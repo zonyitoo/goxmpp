@@ -33,6 +33,12 @@ var (
     TAG_STANZA_PRESENCE_SERVER xml.Name = xml.Name{Space: XMLNS_JABBER_SERVER, Local: "presence"}
     TAG_STANZA_MESSAGE_CLIENT  xml.Name = xml.Name{Space: XMLNS_JABBER_CLIENT, Local: "message"}
     TAG_STANZA_MESSAGE_SERVER  xml.Name = xml.Name{Space: XMLNS_JABBER_SERVER, Local: "message"}
+
+    // Extensions
+    // XEP-0138
+    TAG_STREAM_COMPRESSION_COMPRESS   xml.Name = xml.Name{Space: XMLNS_STREAM_FEATURE_COMPRESSION, Local: "compress"}
+    TAG_STREAM_COMPRESSION_FAILURE    xml.Name = xml.Name{Space: XMLNS_STREAM_FEATURE_COMPRESSION, Local: "failure"}
+    TAG_STREAM_COMPRESSION_COMPRESSED xml.Name = xml.Name{Space: XMLNS_STREAM_FEATURE_COMPRESSION, Local: "compressed"}
 )
 
 // RFC6120 Section 4
@@ -51,11 +57,14 @@ type XMPPStreamEnd struct {
 }
 
 type XMPPStreamFeatures struct {
-    XMLName        xml.Name                   `xml:"http://etherx.jabber.org/streams features"`
-    StartTLS       *XMPPStartTLS              `xml:",omitempty"`
-    SASLMechanisms *XMPPSASLMechanisms        `xml:",omitempty"`
-    Bind           *XMPPBind                  `xml:",omitempty"`
-    Register       *XMPPStreamFeatureRegister `xml:",omitempty"` // XEP-0077
+    XMLName        xml.Name            `xml:"http://etherx.jabber.org/streams features"`
+    StartTLS       *XMPPStartTLS       `xml:",omitempty"`
+    SASLMechanisms *XMPPSASLMechanisms `xml:",omitempty"`
+    Bind           *XMPPBind           `xml:",omitempty"`
+
+    // Extensions
+    Register    *XMPPStreamFeatureRegister    `xml:",omitempty"` // XEP-0077
+    Compression *XMPPStreamFeatureCompression `xml:",omitempty"` // XEP-0138
 }
 
 type XMPPRequired struct {
@@ -312,7 +321,7 @@ type XMPPSASLErrorTemporaryAuthFailure struct {
 
 type XMPPSASLErrorDescriptiveText struct {
     XMLName xml.Name `xml:"text"`
-    XMLLang string   `xml:"http://www.w3.org/XML/1998/namespace lang,attr"`
+    XMLLang string   `xml:"http://www.w3.org/XML/1998/namespace lang,attr,omitempty"`
     Text    string   `xml:",chardata"`
 }
 
@@ -345,11 +354,22 @@ type XMPPStanzaIQ struct {
     Error *XMPPStanzaError `xml:",omitempty"`
     Bind  *XMPPBind        `xml:",omitempty"`
 
-    // RFC6121
-    Roster *XMPPStanzaIQRosterQuery `xml:",omitempty"`
+    Roster *XMPPStanzaIQRosterQuery `xml:",omitempty"` // RFC6121
 
-    // XEP-0054
-    VCard *XMPPStanzaIQVCard `xml:",omitempty"`
+    // Extensions
+    RPC              *XMPPStanzaIQRPCQuery              `xml:",omitempty"` // XEP-0009
+    LastActivity     *XMPPStanzaIQLastActivityQuery     `xml:",omitempty"` // XEP-0012
+    DiscoInfo        *XMPPProtocolDiscoInfoQuery        `xml:",omitempty"` // XEP-0030
+    DiscoItem        *XMPPProtocolDiscoItemQuery        `xml:",omitempty"` // XEP-0030
+    IBBOpen          *XMPPProtocolInBandByteStreamOpen  `xml:",omitempty"` // XEP-0047
+    IBBData          *XMPPProtocolInBandByteStreamData  `xml:",omitempty"` // XEP-0047
+    IBBClose         *XMPPProtocolInBandByteStreamClose `xml:",omitempty"` // XEP-0047
+    VCard            *XMPPStanzaIQVCard                 `xml:",omitempty"` // XEP-0054
+    ByteStream       *XMPPProtocolByteStreamQuery       `xml:",omitempty"` // XEP-0065
+    OutOfBandData    *XMPPOutofBandDataQuery            `xml:",omitempty"` // XEP-0066
+    Register         *XMPPStanzaIQRegisterQuery         `xml:",omitempty"` // XEP-0077
+    StreamInitiation *XMPPProtocolStreamInitiation      `xml:",omitempty"` // XEP-0095
+    Ping             *XMPPStanzaIQPing                  `xml:",omitempty"` // XEP-0199
 }
 
 const (
@@ -379,6 +399,10 @@ type XMPPStanzaMessage struct {
     Subject *XMPPStanzaMessageSubject `xml:",omitempty"`
     Thread  *XMPPStanzaMessageThread  `xml:",omitempty"`
     Error   *XMPPStanzaError          `xml:",omitempty"`
+
+    // Extensions
+    ByteStreamUDPSuccess *XMPPProtocolByteStreamUDPSuccess `xml:",omitempty"` // XEP-0065
+    XOutOfBandData       *XMPPXOutOfBandData               `xml:",omitempty"` // XEP-0066
 }
 
 const (
@@ -432,8 +456,8 @@ type XMPPStanzaPresence struct {
     Priority byte                      `xml:"priority,omitempty"`
     Error    *XMPPStanzaError          `xml:",omitempty"`
 
-    // XEP-0115
-    Cap *XMPPStanzaPresenceCAP `xml:",omitempty"`
+    // Extensions
+    EntityCapabilities *XMPPProtocolEntityCapabilities `xml:",omitempty"`
 }
 
 const (
@@ -498,7 +522,7 @@ type XMPPStreamError struct {
 
 type XMPPStreamErrorDescriptiveText struct {
     XMLName xml.Name `xml:"urn:ietf:params:xml:ns:xmpp-streams text"`
-    XMLLang string   `xml:"http://www.w3.org/XML/1998/namespace lang,attr"`
+    XMLLang string   `xml:"http://www.w3.org/XML/1998/namespace lang,attr,omitempty"`
     Text    string   `xml:",chardata"`
 }
 
@@ -770,7 +794,8 @@ type XMPPStreamErrorUnsupportedVersion struct {
 
 type XMPPStanzaErrorDescriptiveText struct {
     XMLName xml.Name `xml:"urn:ietf:params:xml:ns:xmpp-stanzas text"`
-    XMLLang string   `xml:"http://www.w3.org/XML/1998/namespace lang,attr"`
+    XMLLang string   `xml:"http://www.w3.org/XML/1998/namespace lang,attr,omitempty"`
+    Text    string   `xml:",chardata"`
 }
 
 // RFC6120 Section 8.3
@@ -791,9 +816,15 @@ type XMPPStanzaError struct {
     XMLName xml.Name                        `xml:"error"`
     Type    string                          `xml:"type,attr"`
     Code    int                             `xml:"code,attr"` // Defined in XEP-0086, which is already deprecated!
-    Text    *XMPPStanzaErrorDescriptiveText `xml:"omitempty"`
     By      string                          `xml:"by,attr,omitempty"`
+    Text    *XMPPStanzaErrorDescriptiveText `xml:",omitempty"`
 
+    XMPPStanzaErrorGroup
+
+    ApplicationSpecificConditions string `xml:",any,innerxml,omitempty"`
+}
+
+type XMPPStanzaErrorGroup struct {
     BadRequest            *XMPPStanzaErrorBadRequest            `xml:",omitempty"`
     Conflict              *XMPPStanzaErrorConflict              `xml:",omitempty"`
     FeatureNotImplemented *XMPPStanzaErrorFeatureNotImplemented `xml:",omitempty"`
@@ -805,6 +836,7 @@ type XMPPStanzaError struct {
     NotAcceptable         *XMPPStanzaErrorNotAcceptable         `xml:",omitempty"`
     NotAllowed            *XMPPStanzaErrorNotAllowed            `xml:",omitempty"`
     NotAuthorized         *XMPPStanzaErrorNotAuthorized         `xml:",omitempty"`
+    PaymentRequired       *XMPPStanzaErrorPaymentRequired       `xml:",omitempty"`
     PolicyViolation       *XMPPStanzaErrorPolicyVoilation       `xml:",omitempty"`
     RecipientUnavailable  *XMPPStanzaErrorRecipientUnavailable  `xml:",omitempty"`
     Redirect              *XMPPStanzaErrorRedirect              `xml:",omitempty"`
@@ -816,8 +848,6 @@ type XMPPStanzaError struct {
     SubscriptionRequired  *XMPPStanzaErrorSubscriptionRequired  `xml:",omitempty"`
     UndefinedCondition    *XMPPStanzaErrorUndefinedCondition    `xml:",omitempty"`
     UnexpectedRequest     *XMPPStanzaErrorUnexpectedRequest     `xml:",omitempty"`
-
-    ApplicationSpecificConditions string `xml:",any,innerxml,omitempty"`
 }
 
 const (
@@ -945,6 +975,11 @@ type XMPPStanzaErrorNotAllowed struct {
 // be "auth".
 type XMPPStanzaErrorNotAuthorized struct {
     XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-stanzas not-authorized"`
+    Text    *XMPPStanzaErrorDescriptiveText `xml:",omitempty"`
+}
+
+type XMPPStanzaErrorPaymentRequired struct {
+    XMLName xml.Name                        `xml:"urn:ietf:params:xml:ns:xmpp-stanzas payment-required"`
     Text    *XMPPStanzaErrorDescriptiveText `xml:",omitempty"`
 }
 

@@ -74,6 +74,15 @@ func (d *Decoder) ParseElement(startToken xml.StartElement) (interface{}, error)
     case TAG_STANZA_MESSAGE_SERVER, TAG_STANZA_MESSAGE_CLIENT:
         element = &XMPPStanzaMessage{}
 
+    // Extensions
+    // XEP-0138
+    case TAG_STREAM_COMPRESSION_COMPRESS:
+        element = &XMPPStreamCompress{}
+    case TAG_STREAM_COMPRESSION_FAILURE:
+        element = &XMPPStreamCompressionFailure{}
+    case TAG_STREAM_COMPRESSION_COMPRESSED:
+        element = &XMPPStreamCompressed{}
+
     default:
         element = &XMPPCustom{}
     }
