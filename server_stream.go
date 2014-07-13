@@ -25,9 +25,12 @@ func NewC2SStream(trans Transport, s *Server) *C2SStream {
         state:     STREAM_STAT_INIT,
         server:    s,
     }
-    go stream.asyncWrite()
-    go stream.asyncProcess()
     return stream
+}
+
+func (s *C2SStream) Run() {
+    go s.asyncWrite()
+    go s.asyncProcess()
 }
 
 func (s *C2SStream) asyncWrite() {
@@ -91,14 +94,14 @@ func (s *C2SStream) asyncProcess() {
                 InvalidXML: &XMPPStreamErrorInvalidXML{},
             })
             return
-        } else if s.ServerConfig().UseTLS && s.State()&STREAM_STAT_TLS_PROCEED == 0 && (ev != EVENT_STREAM_TLS_NEGOCIATION && ev != EVENT_STREAM_FEATURE) {
+        } else if s.Config().UseTLS && s.State()&STREAM_STAT_TLS_PROCEED == 0 && (ev != EVENT_STREAM_TLS_NEGOCIATION && ev != EVENT_STREAM_FEATURE) {
 
             s.SendErrorAndClose(&XMPPStreamError{
                 InvalidXML: &XMPPStreamErrorInvalidXML{},
             })
             return
 
-        } else if s.ServerConfig().UseTLS && s.State()&STREAM_STAT_TLS_PROCEED != 0 && (ev == EVENT_STREAM_TLS_NEGOCIATION || ev == EVENT_STREAM_FEATURE) {
+        } else if s.Config().UseTLS && s.State()&STREAM_STAT_TLS_PROCEED != 0 && (ev == EVENT_STREAM_TLS_NEGOCIATION || ev == EVENT_STREAM_FEATURE) {
 
             s.SendErrorAndClose(&XMPPStreamError{
                 InvalidXML: &XMPPStreamErrorInvalidXML{},
@@ -126,7 +129,7 @@ func (s *C2SStream) asyncProcess() {
     }
 }
 
-func (s *C2SStream) ServerConfig() *ServerConfig {
+func (s *C2SStream) Config() *Config {
     return s.server.config
 }
 
@@ -185,9 +188,9 @@ func (s *C2SStream) SendErrorAndClose(e interface{}) error {
             jidstr = s.JID().String()
         }
         s.StartStream(STREAM_TYPE_CLIENT,
-            s.ServerConfig().ServerName,
+            s.Config().ServerName,
             jidstr,
-            s.ServerConfig().StreamVersion.String(),
+            s.Config().StreamVersion.String(),
             "en")
     }
     err := s.SendElement(e)

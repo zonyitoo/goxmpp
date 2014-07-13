@@ -8,10 +8,10 @@ import (
 type Server struct {
     streamDispatcher *StreamEventDispatcher
     listener         net.Listener
-    config           *ServerConfig
+    config           *Config
 }
 
-func NewServer(conf *ServerConfig) *Server {
+func NewServer(conf *Config) *Server {
     listener, err := net.Listen("tcp", conf.ListenAddr)
     if err != nil {
         panic(err)
@@ -50,7 +50,7 @@ func (s *Server) doAccept() {
 
         trans := NewTCPTransport(conn)
         trans.SetReadTimeout()
-        NewC2SStream(trans, s)
+        NewC2SStream(trans, s).Run()
     }
 
     log.Info("Server exited")

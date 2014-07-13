@@ -5,9 +5,16 @@ import (
 )
 
 const (
-    EVENT_STREAM_HEADER = iota
+    EVENT_STREAM_INIT = iota
+    EVENT_STREAM_HEADER
     EVENT_STREAM_TLS_NEGOCIATION
+    EVENT_STREAM_TLS_ABORTED
+    EVENT_STREAM_TLS_FAILURE
+    EVENT_STREAM_TLS_PROCEEDED
     EVENT_STREAM_SASL_NEGOCIATION
+    EVENT_STREAM_SASL_SUCCESSED
+    EVENT_STREAM_SASL_FAILURE
+    EVENT_STREAM_SASL_ABORTED
     EVENT_STREAM_FEATURE
     EVENT_STREAM_STANZA_INFO_QUERY
     EVENT_STREAM_STANZA_MESSAGE
@@ -46,10 +53,22 @@ func (ed *StreamEventDispatcher) EventOf(x interface{}) int {
         return EVENT_STREAM_FEATURE
     case *XMPPStreamError:
         return EVENT_STREAM_ERROR
-    case *XMPPStartTLS, *XMPPTLSAbort, *XMPPTLSProceed, *XMPPTLSFailure:
+    case *XMPPStartTLS:
         return EVENT_STREAM_TLS_NEGOCIATION
-    case *XMPPSASLAuth, *XMPPSASLChallenge, *XMPPSASLResponse, *XMPPSASLAbort, *XMPPSASLFailure, *XMPPSASLSuccess:
+    case *XMPPTLSAbort:
+        return EVENT_STREAM_TLS_ABORTED
+    case *XMPPTLSProceed:
+        return EVENT_STREAM_TLS_PROCEEDED
+    case *XMPPTLSFailure:
+        return EVENT_STREAM_TLS_FAILURE
+    case *XMPPSASLAuth, *XMPPSASLChallenge, *XMPPSASLResponse:
         return EVENT_STREAM_SASL_NEGOCIATION
+    case *XMPPSASLAbort:
+        return EVENT_STREAM_SASL_ABORTED
+    case *XMPPSASLFailure:
+        return EVENT_STREAM_SASL_FAILURE
+    case *XMPPSASLSuccess:
+        return EVENT_STREAM_SASL_SUCCESSED
     case *XMPPStanzaIQ:
         return EVENT_STREAM_STANZA_INFO_QUERY
     case *XMPPStanzaPresence:

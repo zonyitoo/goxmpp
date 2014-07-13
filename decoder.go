@@ -49,6 +49,8 @@ func (d *Decoder) ParseElement(startToken xml.StartElement) (interface{}, error)
         return streamElem, nil
     case TAG_STREAM_FEATURES:
         element = &XMPPStreamFeatures{}
+    case TAG_STREAM_ERROR:
+        element = &XMPPStreamError{}
 
     case TAG_TLS_START:
         element = &XMPPStartTLS{}
@@ -108,7 +110,7 @@ func (d *Decoder) GetNextElement() (interface{}, error) {
         case xml.StartElement:
             return d.ParseElement(t)
         case xml.ProcInst:
-            return t, nil
+            continue
         case xml.EndElement:
             if t.Name == TAG_STREAM {
                 return &XMPPStreamEnd{

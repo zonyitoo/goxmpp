@@ -21,7 +21,7 @@ const (
 )
 
 type Stream interface {
-    ServerConfig() *ServerConfig
+    Config() *Config
     JID() *JID
     SetJID(*JID)
     SendBytes([]byte)
@@ -32,6 +32,7 @@ type Stream interface {
     EndStream()
     State() int
     SetState(int)
+    Run()
 }
 
 type StreamVersion struct {

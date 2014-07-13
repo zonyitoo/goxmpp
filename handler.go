@@ -91,7 +91,7 @@ func defaultStreamHeaderHandler(s Stream, x *XMPPStream) bool {
     version := &StreamVersion{}
     version.FromString(x.Version)
 
-    if !s.ServerConfig().StreamVersion.GreaterOrEqualTo(version) {
+    if !s.Config().StreamVersion.GreaterOrEqualTo(version) {
         err := XMPPStreamError{
             UnsupportedVersion: &XMPPStreamErrorUnsupportedVersion{},
         }
@@ -99,17 +99,17 @@ func defaultStreamHeaderHandler(s Stream, x *XMPPStream) bool {
         return true
     }
 
-    s.StartStream(STREAM_TYPE_CLIENT, x.To, x.From, s.ServerConfig().StreamVersion.String(), x.XMLLang)
+    s.StartStream(STREAM_TYPE_CLIENT, x.To, x.From, s.Config().StreamVersion.String(), x.XMLLang)
     s.SetState(s.State() | STREAM_STAT_STARTED)
 
     feature := &XMPPStreamFeatures{}
-    if s.State()&STREAM_STAT_TLS_PROCEED == 0 && s.ServerConfig().UseTLS {
+    if s.State()&STREAM_STAT_TLS_PROCEED == 0 && s.Config().UseTLS {
         feature.StartTLS = &XMPPStartTLS{
             Required: &XMPPRequired{},
         }
     } else if s.State()&STREAM_STAT_SASL_SUCCEEDED == 0 {
         feature.SASLMechanisms = &XMPPSASLMechanisms{
-            Mechanisms: s.ServerConfig().SASLMechanisms,
+            Mechanisms: s.Config().SASLMechanisms,
         }
     } else {
         feature.Bind = &XMPPBind{}
@@ -127,7 +127,7 @@ func DefaultPingServerHandler(s Stream, _x interface{}) bool {
     x, _ := _x.(*XMPPStanzaIQ)
 
     if x.Ping != nil {
-        if x.To == s.ServerConfig().ServerName {
+        if x.To == s.Config().ServerName {
             iq := XMPPStanzaIQ{
                 Type: XMPP_STANZA_IQ_TYPE_RESULT,
                 Id:   x.Id,
@@ -136,7 +136,7 @@ func DefaultPingServerHandler(s Stream, _x interface{}) bool {
                 Ping: &XMPPStanzaIQPing{},
             }
 
-            if !s.ServerConfig().PingEnabled {
+            if !s.Config().PingEnabled {
                 iq.Error = &XMPPStanzaError{
                     Type: XMPP_STANZA_ERROR_TYPE_CANCEL,
                     XMPPStanzaErrorGroup: XMPPStanzaErrorGroup{

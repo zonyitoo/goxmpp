@@ -18,6 +18,7 @@ const (
 var (
     TAG_STREAM                 xml.Name = xml.Name{Space: XMLNS_STREAM, Local: "stream"}
     TAG_STREAM_FEATURES        xml.Name = xml.Name{Space: XMLNS_STREAM, Local: "features"}
+    TAG_STREAM_ERROR           xml.Name = xml.Name{Space: XMLNS_STREAM, Local: "error"}
     TAG_TLS_START              xml.Name = xml.Name{Space: XMLNS_XMPP_TLS, Local: "starttls"}
     TAG_TLS_PROCEED            xml.Name = xml.Name{Space: XMLNS_XMPP_TLS, Local: "proceed"}
     TAG_TLS_FAILURE            xml.Name = xml.Name{Space: XMLNS_XMPP_TLS, Local: "failure"}
@@ -483,7 +484,7 @@ type XMPPStanzaPresenceStatus struct {
 
 // RFC6120 Section 4.9
 type XMPPStreamError struct {
-    XMLName xml.Name `xml:"stream:error"`
+    XMLName xml.Name `xml:"http://etherx.jabber.org/streams error"`
 
     NotWellFormed          *XMPPStreamErrorNotWellFormed          `xml:",omitempty"`
     InvalidNamespace       *XMPPStreamErrorInvalidNamespace       `xml:",omitempty"`
