@@ -452,7 +452,7 @@ type XMPPStanzaPresence struct {
     Id       string                    `xml:"id,attr,omitempty"`
     To       string                    `xml:"to,attr,omitempty"`
     Type     string                    `xml:"type,attr,omitempty"`
-    Show     string                    `xml:"show",omitempty`
+    Show     string                    `xml:"show,omitempty"`
     Status   *XMPPStanzaPresenceStatus `xml:",omitempty"`
     Priority byte                      `xml:"priority,omitempty"`
     Error    *XMPPStanzaError          `xml:",omitempty"`
