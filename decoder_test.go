@@ -2,7 +2,7 @@ package xmpp
 
 import (
     "bytes"
-    "encoding/xml"
+    "github.com/zonyitoo/goxmpp/protocol"
     "testing"
 )
 
@@ -77,20 +77,14 @@ const (
 `
 )
 
-func test_GetProcInst(value interface{}, t *testing.T) {
-    if _, ok := value.(xml.ProcInst); !ok {
-        t.Fatal("Error occurs while decoding ProcInst")
-    }
-}
-
 func test_StreamHeader(value interface{}, t *testing.T) {
-    if _, ok := value.(*XMPPStream); !ok {
+    if _, ok := value.(*protocol.XMPPStream); !ok {
         t.Fatal("Error occurs while decoding Stream header")
     }
 }
 
 func test_StreamFeatureTLS(value interface{}, t *testing.T) {
-    if features, ok := value.(*XMPPStreamFeatures); !ok {
+    if features, ok := value.(*protocol.XMPPStreamFeatures); !ok {
         t.Fatal("Error occurs while decoding Stream Features")
     } else {
         if features.StartTLS == nil {
@@ -102,19 +96,19 @@ func test_StreamFeatureTLS(value interface{}, t *testing.T) {
 }
 
 func test_StartTLS(value interface{}, t *testing.T) {
-    if _, ok := value.(*XMPPStartTLS); !ok {
+    if _, ok := value.(*protocol.XMPPStartTLS); !ok {
         t.Fatal("Error occurs while decoding StartTLS")
     }
 }
 
 func test_TLSProceed(value interface{}, t *testing.T) {
-    if _, ok := value.(*XMPPTLSProceed); !ok {
+    if _, ok := value.(*protocol.XMPPTLSProceed); !ok {
         t.Fatal("Error occurs while decoding TLSProceed")
     }
 }
 
 func test_FeatureSASLMechanism(value interface{}, t *testing.T) {
-    if features, ok := value.(*XMPPStreamFeatures); !ok {
+    if features, ok := value.(*protocol.XMPPStreamFeatures); !ok {
         t.Fatal("Error occurs while decoding Stream Features")
     } else {
         if features.SASLMechanisms == nil {
@@ -132,7 +126,7 @@ func test_FeatureSASLMechanism(value interface{}, t *testing.T) {
 }
 
 func test_SASLAuth(value interface{}, t *testing.T) {
-    if saslauth, ok := value.(*XMPPSASLAuth); !ok {
+    if saslauth, ok := value.(*protocol.XMPPSASLAuth); !ok {
         t.Fatal("Error occurs while decoding SASLAuth")
     } else {
         if saslauth.Data != "biwsbj1qdWxpZXQscj1vTXNUQUF3QUFBQU1BQUFBTlAwVEFBQUFBQUJQVTBBQQ==" {
@@ -144,7 +138,7 @@ func test_SASLAuth(value interface{}, t *testing.T) {
 }
 
 func test_SASLChallenge(value interface{}, t *testing.T) {
-    if saslchallenge, ok := value.(*XMPPSASLChallenge); !ok {
+    if saslchallenge, ok := value.(*protocol.XMPPSASLChallenge); !ok {
         t.Fatal("Error occurs while decoding SASLChallenge")
     } else {
         if saslchallenge.Data != "cj1vTXNUQUF3QUFBQU1BQUFBTlAwVEFBQUFBQUJQVTBBQWUxMjQ2OTViLTY5YTktNGRlNi05YzMwLWI1MWIzODA4YzU5ZSxzPU5qaGtZVE0wTURndE5HWTBaaTAwTmpkbUxUa3hNbVV0TkRsbU5UTm1ORE5rTURNeixpPTQwOTY=" {
@@ -154,7 +148,7 @@ func test_SASLChallenge(value interface{}, t *testing.T) {
 }
 
 func test_SASLResponse(value interface{}, t *testing.T) {
-    if saslresponse, ok := value.(*XMPPSASLResponse); !ok {
+    if saslresponse, ok := value.(*protocol.XMPPSASLResponse); !ok {
         t.Fatal("Error occurs while decoding SASLResponse")
     } else {
         if saslresponse.Data != "Yz1iaXdzLHI9b01zVEFBd0FBQUFNQUFBQU5QMFRBQUFBQUFCUFUwQUFlMTI0Njk1Yi02OWE5LTRkZTYtOWMzMC1iNTFiMzgwOGM1OWUscD1VQTU3dE0vU3ZwQVRCa0gyRlhzMFdEWHZKWXc9" {
@@ -164,7 +158,7 @@ func test_SASLResponse(value interface{}, t *testing.T) {
 }
 
 func test_SASLSucceed(value interface{}, t *testing.T) {
-    if saslsuc, ok := value.(*XMPPSASLSuccess); !ok {
+    if saslsuc, ok := value.(*protocol.XMPPSASLSuccess); !ok {
         t.Fatal("Error occurs while decoding SASLSuccess")
     } else {
         if saslsuc.Data != "dj1wTk5ERlZFUXh1WHhDb1NFaVc4R0VaKzFSU289" {
@@ -174,7 +168,7 @@ func test_SASLSucceed(value interface{}, t *testing.T) {
 }
 
 func test_FeatureBind(value interface{}, t *testing.T) {
-    if fea, ok := value.(*XMPPStreamFeatures); !ok {
+    if fea, ok := value.(*protocol.XMPPStreamFeatures); !ok {
         t.Fatal("Error occurs while decoding StreamFeature")
     } else {
         if fea.Bind == nil {
@@ -184,7 +178,7 @@ func test_FeatureBind(value interface{}, t *testing.T) {
 }
 
 func test_IQBindReq(value interface{}, t *testing.T) {
-    if iq, ok := value.(*XMPPStanzaIQ); !ok {
+    if iq, ok := value.(*protocol.XMPPStanzaIQ); !ok {
         t.Fatal("Error occurs while decoding IQ")
     } else {
         if iq.Bind == nil {
@@ -200,7 +194,7 @@ func test_IQBindReq(value interface{}, t *testing.T) {
 }
 
 func test_IQBindResp(value interface{}, t *testing.T) {
-    if iq, ok := value.(*XMPPStanzaIQ); !ok {
+    if iq, ok := value.(*protocol.XMPPStanzaIQ); !ok {
         t.Fatal("Error occurs while decoding IQ")
     } else {
         if iq.Bind == nil {
@@ -216,7 +210,7 @@ func test_IQBindResp(value interface{}, t *testing.T) {
 }
 
 func test_Message(value interface{}, t *testing.T) {
-    if msg, ok := value.(*XMPPStanzaMessage); !ok {
+    if msg, ok := value.(*protocol.XMPPStanzaMessage); !ok {
         t.Fatal("Error occurs while decoding Message")
     } else {
         if msg.Body == nil {
@@ -229,8 +223,8 @@ func test_Message(value interface{}, t *testing.T) {
             t.Errorf("XMPPStanzaMessage.To not match, %s != %s", msg.To, "juliet@im.example.com/balcony")
         } else if msg.Id != "ju2ba41c" {
             t.Errorf("XMPPStanzaMessage.Id not match, %s != %s", msg.Id, "ju2ba41c")
-        } else if msg.Type != XMPP_STANZA_MESSAGE_TYPE_CHAT {
-            t.Errorf("XMPPStanzaMessage.Type not match, %s != %s", msg.Type, XMPP_STANZA_MESSAGE_TYPE_CHAT)
+        } else if msg.Type != protocol.XMPP_STANZA_MESSAGE_TYPE_CHAT {
+            t.Errorf("XMPPStanzaMessage.Type not match, %s != %s", msg.Type, protocol.XMPP_STANZA_MESSAGE_TYPE_CHAT)
         } else if msg.XMLLang != "en" {
             t.Errorf("XMPPStanzaMessage.XMLLang not match, %s != %s", msg.XMLLang, "en")
         }
@@ -238,15 +232,15 @@ func test_Message(value interface{}, t *testing.T) {
 }
 
 func test_Presence(value interface{}, t *testing.T) {
-    if pres, ok := value.(*XMPPStanzaPresence); !ok {
+    if pres, ok := value.(*protocol.XMPPStanzaPresence); !ok {
         t.Fatal("Error occurs while decoding Presence")
     } else {
         if pres.From != "romeo@example.net/orchard" {
             t.Errorf("XMPPStanzaPresence.From not match, %s != %s", pres.From, "romeo@example.net/orchard")
         } else if pres.XMLLang != "en" {
             t.Errorf("XMPPStanzaPresence.XMLLang not match, %s != %s", pres.XMLLang, "en")
-        } else if pres.Show != XMPP_STANZA_PRESENCE_SHOW_DND {
-            t.Errorf("XMPPStanzaPresence.Show not match, %s != %s", pres.Show, XMPP_STANZA_PRESENCE_SHOW_DND)
+        } else if pres.Show != protocol.XMPP_STANZA_PRESENCE_SHOW_DND {
+            t.Errorf("XMPPStanzaPresence.Show not match, %s != %s", pres.Show, protocol.XMPP_STANZA_PRESENCE_SHOW_DND)
         } else if pres.Status == nil {
             t.Errorf("XMPPStanzaPresence.Status should not be nil")
         } else if pres.Status.Data != "Wooing Juliet" {
@@ -260,7 +254,6 @@ func Test_Decoder(t *testing.T) {
     decoder := NewDecoder(r)
 
     tests := []func(interface{}, *testing.T){
-        test_GetProcInst,
         test_StreamHeader,
         test_StreamFeatureTLS,
         test_StartTLS,

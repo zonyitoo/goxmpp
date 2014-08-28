@@ -6,6 +6,7 @@ import (
     "io"
     // "log"
     "bytes"
+    "github.com/zonyitoo/goxmpp/protocol"
 )
 
 var (
@@ -24,11 +25,11 @@ func NewDecoder(r io.Reader) *Decoder {
     }
 }
 
-func (d *Decoder) ParseElement(startToken xml.StartElement) (interface{}, error) {
+func (d *Decoder) ParseElement(startToken xml.StartElement) (protocol.Protocol, error) {
     var element interface{}
     switch startToken.Name {
-    case TAG_STREAM:
-        streamElem := &XMPPStream{}
+    case protocol.TAG_STREAM:
+        streamElem := &protocol.XMPPStream{}
         for _, attr := range startToken.Attr {
             switch attr.Name {
             case xml.Name{Space: "", Local: "from"}:
@@ -47,49 +48,49 @@ func (d *Decoder) ParseElement(startToken xml.StartElement) (interface{}, error)
         }
         streamElem.XMLName = startToken.Name
         return streamElem, nil
-    case TAG_STREAM_FEATURES:
-        element = &XMPPStreamFeatures{}
-    case TAG_STREAM_ERROR:
-        element = &XMPPStreamError{}
+    case protocol.TAG_STREAM_FEATURES:
+        element = &protocol.XMPPStreamFeatures{}
+    case protocol.TAG_STREAM_ERROR:
+        element = &protocol.XMPPStreamError{}
 
-    case TAG_TLS_START:
-        element = &XMPPStartTLS{}
-    case TAG_TLS_PROCEED:
-        element = &XMPPTLSProceed{}
-    case TAG_TLS_FAILURE:
-        element = &XMPPTLSFailure{}
-    case TAG_TLS_ABORT:
-        element = &XMPPTLSAbort{}
+    case protocol.TAG_TLS_START:
+        element = &protocol.XMPPStartTLS{}
+    case protocol.TAG_TLS_PROCEED:
+        element = &protocol.XMPPTLSProceed{}
+    case protocol.TAG_TLS_FAILURE:
+        element = &protocol.XMPPTLSFailure{}
+    case protocol.TAG_TLS_ABORT:
+        element = &protocol.XMPPTLSAbort{}
 
-    case TAG_SASL_SUCCESS:
-        element = &XMPPSASLSuccess{}
-    case TAG_SASL_RESPONSE:
-        element = &XMPPSASLResponse{}
-    case TAG_SASL_FAILURE:
-        element = &XMPPSASLFailure{}
-    case TAG_SASL_CHALLENGE:
-        element = &XMPPSASLChallenge{}
-    case TAG_SASL_AUTH:
-        element = &XMPPSASLAuth{}
+    case protocol.TAG_SASL_SUCCESS:
+        element = &protocol.XMPPSASLSuccess{}
+    case protocol.TAG_SASL_RESPONSE:
+        element = &protocol.XMPPSASLResponse{}
+    case protocol.TAG_SASL_FAILURE:
+        element = &protocol.XMPPSASLFailure{}
+    case protocol.TAG_SASL_CHALLENGE:
+        element = &protocol.XMPPSASLChallenge{}
+    case protocol.TAG_SASL_AUTH:
+        element = &protocol.XMPPSASLAuth{}
 
-    case TAG_STANZA_IQ_CLIENT, TAG_STANZA_IQ_SERVER:
-        element = &XMPPStanzaIQ{}
-    case TAG_STANZA_PRESENCE_SERVER, TAG_STANZA_PRESENCE_CLIENT:
-        element = &XMPPStanzaPresence{}
-    case TAG_STANZA_MESSAGE_SERVER, TAG_STANZA_MESSAGE_CLIENT:
-        element = &XMPPStanzaMessage{}
+    case protocol.TAG_STANZA_IQ_CLIENT, protocol.TAG_STANZA_IQ_SERVER:
+        element = &protocol.XMPPStanzaIQ{}
+    case protocol.TAG_STANZA_PRESENCE_SERVER, protocol.TAG_STANZA_PRESENCE_CLIENT:
+        element = &protocol.XMPPStanzaPresence{}
+    case protocol.TAG_STANZA_MESSAGE_SERVER, protocol.TAG_STANZA_MESSAGE_CLIENT:
+        element = &protocol.XMPPStanzaMessage{}
 
     // Extensions
     // XEP-0138
-    case TAG_STREAM_COMPRESSION_COMPRESS:
-        element = &XMPPStreamCompressionCompress{}
-    case TAG_STREAM_COMPRESSION_FAILURE:
-        element = &XMPPStreamCompressionFailure{}
-    case TAG_STREAM_COMPRESSION_COMPRESSED:
-        element = &XMPPStreamCompressionCompressed{}
+    case protocol.TAG_STREAM_COMPRESSION_COMPRESS:
+        element = &protocol.XMPPStreamCompressionCompress{}
+    case protocol.TAG_STREAM_COMPRESSION_FAILURE:
+        element = &protocol.XMPPStreamCompressionFailure{}
+    case protocol.TAG_STREAM_COMPRESSION_COMPRESSED:
+        element = &protocol.XMPPStreamCompressionCompressed{}
 
     default:
-        element = &XMPPCustom{}
+        element = &protocol.XMPPCustom{}
     }
 
     if err := d.xmlDecoder.DecodeElement(element, &startToken); err != nil {
@@ -99,7 +100,7 @@ func (d *Decoder) ParseElement(startToken xml.StartElement) (interface{}, error)
     return element, nil
 }
 
-func (d *Decoder) GetNextElement() (interface{}, error) {
+func (d *Decoder) GetNextElement() (protocol.Protocol, error) {
     // Move to First StartElement
     for {
         token, err := d.xmlDecoder.Token()
@@ -112,8 +113,8 @@ func (d *Decoder) GetNextElement() (interface{}, error) {
         case xml.ProcInst:
             continue
         case xml.EndElement:
-            if t.Name == TAG_STREAM {
-                return &XMPPStreamEnd{
+            if t.Name == protocol.TAG_STREAM {
+                return &protocol.XMPPStreamEnd{
                     XMLName: t.Name,
                 }, nil
             } else {
