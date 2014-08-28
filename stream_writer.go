@@ -73,7 +73,7 @@ func (sw *StreamWriter) Open(stream *protocol.XMPPStream) error {
     }
     header := protocol.GenXMPPStreamHeader(stream)
     sw.hasStarted = true
-    sw.wchan = make(chan []byte, 1024)
+    sw.wchan = make(chan []byte)
     sw.wgroup.Add(1)
     go sw.send()
 
