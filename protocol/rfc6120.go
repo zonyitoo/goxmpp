@@ -53,9 +53,9 @@ type XMPPStream struct {
     Xmlns   string   `xml:"xmlns,attr"`
 }
 
-type XMPPStreamEnd struct {
-    XMLName xml.Name `xml:"http://etherx.jabber.org/streams stream"`
-}
+// type XMPPStreamEnd struct {
+//     XMLName xml.Name `xml:"http://etherx.jabber.org/streams stream"`
+// }
 
 type XMPPStreamFeatures struct {
     XMLName        xml.Name            `xml:"http://etherx.jabber.org/streams features"`
@@ -1126,4 +1126,4 @@ func GenXMPPStreamHeader(s *XMPPStream) string {
         XMLNS_STREAM)
 }
 
-const stream_end_fmt = `</stream:stream>`
+const XMPPStreamEnd string = `</stream:stream>`

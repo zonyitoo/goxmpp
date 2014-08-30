@@ -1,4 +1,4 @@
-package xmpp
+package stream
 
 import (
     "encoding/xml"
@@ -114,9 +114,7 @@ func (d *Decoder) GetNextElement() (protocol.Protocol, error) {
             continue
         case xml.EndElement:
             if t.Name == protocol.TAG_STREAM {
-                return &protocol.XMPPStreamEnd{
-                    XMLName: t.Name,
-                }, nil
+                return protocol.XMPPStreamEnd, nil
             } else {
                 return nil, DecoderUnexpectedEndOfElementError
             }

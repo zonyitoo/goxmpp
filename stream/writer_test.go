@@ -1,4 +1,4 @@
-package xmpp
+package stream
 
 import (
     "bytes"
@@ -8,10 +8,10 @@ import (
     "testing"
 )
 
-func Test_StreamWriter(t *testing.T) {
+func Test_Writer(t *testing.T) {
     buf := &bytes.Buffer{}
 
-    sw := NewStreamWriter(buf)
+    sw := NewWriter(buf)
 
     sheader := &protocol.XMPPStream{
         From:    "juliet@example.com",
