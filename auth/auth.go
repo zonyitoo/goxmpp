@@ -8,7 +8,7 @@ import (
 type SASLAuthenticate struct{}
 
 type SASLAuthenticator interface {
-    Process(*stream.Reader, *stream.Writer) bool
+    Process(*stream.Reader, *stream.Writer, string) bool
 }
 
 type SASLAuthencatorFactory func() SASLAuthenticator

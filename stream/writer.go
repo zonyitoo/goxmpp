@@ -42,7 +42,7 @@ func (sw *Writer) SendBytes(data []byte) error {
 }
 
 func (sw *Writer) Close() error {
-    if err := sw.SendBytes([]byte(protocol.XMPPStreamEnd)); err != nil {
+    if err := sw.SendBytes([]byte(protocol.XMPPStreamEndFmt)); err != nil {
         return err
     }
     return sw.Destroy()
@@ -55,6 +55,7 @@ func (sw *Writer) Destroy() error {
 }
 
 func (sw *Writer) Open(stream *protocol.XMPPStream) error {
+    sw.SendBytes([]byte(xml.Header))
     header := protocol.GenXMPPStreamHeader(stream)
     if err := sw.SendBytes([]byte(header)); err != nil {
         return err

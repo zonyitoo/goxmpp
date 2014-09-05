@@ -3,6 +3,7 @@ package protocol
 import (
     "encoding/xml"
     "fmt"
+    "reflect"
 )
 
 const (
@@ -14,6 +15,13 @@ const (
     XMLNS_XMPP_BIND     = "urn:ietf:params:xml:ns:xmpp-bind"
     XMLNS_XMPP_STANZAS  = "urn:ietf:params:xml:ns:xmpp-stanzas"
 )
+
+const (
+    XMPP_DNS_SRV_CLIENT = "xmpp-client"
+    XMPP_DNS_SRV_SERVER = "xmpp-server"
+)
+
+type StreamTag xml.Name
 
 var (
     TAG_STREAM                 xml.Name = xml.Name{Space: XMLNS_STREAM, Local: "stream"}
@@ -42,6 +50,32 @@ var (
     TAG_STREAM_COMPRESSION_COMPRESSED xml.Name = xml.Name{Space: XMLNS_STREAM_FEATURE_COMPRESSION, Local: "compressed"}
 )
 
+var TAG_MAP map[xml.Name]reflect.Type = map[xml.Name]reflect.Type{
+    TAG_STREAM_FEATURES:        reflect.TypeOf(XMPPStreamFeatures{}),
+    TAG_STREAM_ERROR:           reflect.TypeOf(XMPPStreamError{}),
+    TAG_TLS_START:              reflect.TypeOf(XMPPStartTLS{}),
+    TAG_TLS_PROCEED:            reflect.TypeOf(XMPPTLSProceed{}),
+    TAG_TLS_FAILURE:            reflect.TypeOf(XMPPTLSFailure{}),
+    TAG_TLS_ABORT:              reflect.TypeOf(XMPPTLSAbort{}),
+    TAG_SASL_AUTH:              reflect.TypeOf(XMPPSASLAuth{}),
+    TAG_SASL_CHALLENGE:         reflect.TypeOf(XMPPSASLChallenge{}),
+    TAG_SASL_SUCCESS:           reflect.TypeOf(XMPPSASLSuccess{}),
+    TAG_SASL_RESPONSE:          reflect.TypeOf(XMPPSASLResponse{}),
+    TAG_SASL_FAILURE:           reflect.TypeOf(XMPPSASLFailure{}),
+    TAG_STANZA_IQ_CLIENT:       reflect.TypeOf(XMPPStanzaIQ{}),
+    TAG_STANZA_IQ_SERVER:       reflect.TypeOf(XMPPStanzaIQ{}),
+    TAG_STANZA_PRESENCE_CLIENT: reflect.TypeOf(XMPPStanzaPresence{}),
+    TAG_STANZA_PRESENCE_SERVER: reflect.TypeOf(XMPPStanzaPresence{}),
+    TAG_STANZA_MESSAGE_CLIENT:  reflect.TypeOf(XMPPStanzaMessage{}),
+    TAG_STANZA_MESSAGE_SERVER:  reflect.TypeOf(XMPPStanzaMessage{}),
+
+    // Extensions
+    // XEP-0138
+    TAG_STREAM_COMPRESSION_COMPRESS:   reflect.TypeOf(XMPPStreamCompressionCompress{}),
+    TAG_STREAM_COMPRESSION_FAILURE:    reflect.TypeOf(XMPPStreamCompressionFailure{}),
+    TAG_STREAM_COMPRESSION_COMPRESSED: reflect.TypeOf(XMPPStreamCompressionCompressed{}),
+}
+
 // RFC6120 Section 4
 type XMPPStream struct {
     XMLName xml.Name `xml:"http://etherx.jabber.org/streams stream"`
@@ -53,9 +87,9 @@ type XMPPStream struct {
     Xmlns   string   `xml:"xmlns,attr"`
 }
 
-// type XMPPStreamEnd struct {
-//     XMLName xml.Name `xml:"http://etherx.jabber.org/streams stream"`
-// }
+type XMPPStreamEnd struct {
+    XMLName xml.Name `xml:"http://etherx.jabber.org/streams stream"`
+}
 
 type XMPPStreamFeatures struct {
     XMLName        xml.Name            `xml:"http://etherx.jabber.org/streams features"`
@@ -1126,4 +1160,4 @@ func GenXMPPStreamHeader(s *XMPPStream) string {
         XMLNS_STREAM)
 }
 
-const XMPPStreamEnd string = `</stream:stream>`
+const XMPPStreamEndFmt string = `</stream:stream>`

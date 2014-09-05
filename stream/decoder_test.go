@@ -249,26 +249,33 @@ func test_Presence(value interface{}, t *testing.T) {
     }
 }
 
-func Test_Decoder(t *testing.T) {
+func test_StreamEnd(value interface{}, t *testing.T) {
+    if _, ok := value.(*protocol.XMPPStreamEnd); !ok {
+        t.Fatal("Error occurs while decoding StreamEnd")
+    }
+}
+
+var tests = []func(interface{}, *testing.T){
+    test_StreamHeader,
+    test_StreamFeatureTLS,
+    test_StartTLS,
+    test_TLSProceed,
+    test_FeatureSASLMechanism,
+    test_SASLAuth,
+    test_SASLChallenge,
+    test_SASLResponse,
+    test_SASLSucceed,
+    test_FeatureBind,
+    test_IQBindReq,
+    test_IQBindResp,
+    test_Message,
+    test_Presence,
+    test_StreamEnd,
+}
+
+func TestDecoder(t *testing.T) {
     r := bytes.NewBufferString(xmpp_stream_sample)
     decoder := NewDecoder(r)
-
-    tests := []func(interface{}, *testing.T){
-        test_StreamHeader,
-        test_StreamFeatureTLS,
-        test_StartTLS,
-        test_TLSProceed,
-        test_FeatureSASLMechanism,
-        test_SASLAuth,
-        test_SASLChallenge,
-        test_SASLResponse,
-        test_SASLSucceed,
-        test_FeatureBind,
-        test_IQBindReq,
-        test_IQBindResp,
-        test_Message,
-        test_Presence,
-    }
 
     for _, test_func := range tests {
         if value, err := decoder.GetNextElement(); err != nil {
@@ -276,6 +283,18 @@ func Test_Decoder(t *testing.T) {
         } else {
             t.Logf("%+v", value)
             test_func(value, t)
+        }
+    }
+}
+
+func BenchmarkDecoder(b *testing.B) {
+    for n := 0; n < b.N; n++ {
+        r := bytes.NewBufferString(xmpp_stream_sample)
+        decoder := NewDecoder(r)
+        for i := 0; i < len(tests); i++ {
+            if _, err := decoder.GetNextElement(); err != nil {
+                b.Fatal(err)
+            }
         }
     }
 }
